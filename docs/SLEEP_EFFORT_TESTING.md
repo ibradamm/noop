@@ -1,5 +1,9 @@
 # Build, collect and verify the personal iOS edition
 
+**Current follow-up:** [batch validation record](SLEEP_EFFORT_BATCH_VALIDATION.md). The ledger below
+records the initial attempt. Native/Watch statements there are historical; the follow-up tracks
+exact tested commits and the remaining gates.
+
 Start with [the feature audit](SLEEP_EFFORT_AUDIT.md). This branch is an initial implementation
 batch, not a ready-to-install validated release. No Apple password is needed for these checks.
 
@@ -103,7 +107,7 @@ weekday and clock/DST behavior. A successful write/readback is not proof that it
 |---|---|---|
 | Night inventory tests | **17 passed**, synthetic temporary SQLite fixtures | Read-only behavior, missing/corrupt inputs, device/window separation, duplicate/conflicting HR seconds, RR provenance/quarantine, old schemas, explicit offsets/DST, no raw-data output, WAL refusal. Not physiological precision. |
 | Broader `Tools/tests` discovery | 201 executed: **199 passed, 2 errors** | The two existing symlink tests in `test_parity_ledger.py` fail with Windows privilege error 1314. No gate was weakened. This run collected the audit's earlier 16-case version; its final 17-case suite was run separately. |
-| Core Tools Python suites | 153 executed: **149 passed, 4 failed** | Existing `test_check_source_references.py` assertions expect POSIX path separators while Windows returns backslashes. The checker and those tests were not modified. |
+| Core Tools Python suites | 153 executed: **149 passed, 4 failed** | Expectations interpolate Windows backslashes, while production diagnostics intentionally use POSIX separators. The follow-up fixes expected paths while retaining exact assertions. |
 | Declaration parity refresh | **Passed**, 288 known findings, no derived-file diff | Existing declaration governance accepts the source inventory. It is not numerical Swift/Kotlin execution evidence. |
 | Detached doc-comment lint | **Passed** | No new detached comments; upstream baseline remains. |
 | Translation gate vs `design-personnalise` | **Passed** after fixing Windows catalog path normalization; no allowances increased | Added personal UI text has translations across shipped locales, including French. Native layout/native-speaker review is still pending. |

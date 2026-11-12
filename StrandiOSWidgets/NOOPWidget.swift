@@ -10,7 +10,7 @@ struct NOOPEntry: TimelineEntry {
 
 struct NOOPProvider: TimelineProvider {
     func placeholder(in context: Context) -> NOOPEntry {
-        NOOPEntry(date: Date(), snapshot: .placeholder)
+        NOOPEntry(date: Date(), snapshot: .unavailable)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (NOOPEntry) -> Void) {

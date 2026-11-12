@@ -6,13 +6,23 @@ final class StrainInputValidityTests: XCTestCase {
     private let hr = (0..<600).map { HRSample(ts: $0, bpm: 160) }
 
     func testCompiledSyntheticOracle() {
+        var lines: [String] = []
         for (name, method) in [("edwards", StrainScorer.Method.edwards), ("banister", .banister)] {
             for sex in ["male", "female"] {
                 let score = StrainScorer.strain(hr, maxHR: 190, method: method, sex: sex)
                 XCTAssertNotNil(score)
-                print("[effort-oracle] \(name)|\(sex)|" + score.map { String(format: "%.2f", $0) }!)
+                let line = "[effort-oracle] \(name)|\(sex)|" + score.map { String(format: "%.2f", $0) }!
+                lines.append(line)
+                print(line)
             }
         }
+        // Verbatim compiled Swift stdout: Linux CI job 131540778101, source e6116cf3.
+        XCTAssertEqual(lines.joined(separator: "\n"), """
+        [effort-oracle] edwards|male|38.66
+        [effort-oracle] edwards|female|38.66
+        [effort-oracle] banister|male|35.30
+        [effort-oracle] banister|female|36.19
+        """)
     }
 
     func testInvalidConfigurationIsUnavailableForBothRecipes() {

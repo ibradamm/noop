@@ -3,8 +3,8 @@ import StrandDesign
 
 // MARK: - WatchGlanceView — the watch app's single primary screen
 //
-// The Apple-Fitness-x-WHOOP look scaled to the wrist: the three NOOP rings (Charge / Effort / Rest) with
-// their numbers in SF-Rounded, each honouring confidence (a calibrating score shows a dash plus a small
+// Sleep and Effort on the wrist, with their numbers in SF-Rounded, each
+// honouring availability (a calibrating score shows a dash plus a small
 // "cal" marker, NEVER a fabricated number), a live heart-rate readout from the watch's own sensor, and a
 // one-line sleep summary. When nothing has synced yet we show a friendly "open NOOP on your iPhone" state,
 // and we always label the scores with the snapshot's age ("as of 2h ago") rather than implying they are live.

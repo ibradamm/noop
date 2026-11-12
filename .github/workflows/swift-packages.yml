@@ -35,6 +35,12 @@ on:
       - 'android/app/src/test/resources/**'
       - 'Strand/Liquid/LiquidCore.swift'
   workflow_dispatch:
+    inputs:
+      validation_scope:
+        description: 'Full suite, or packages touched by the sleep/effort validation batch'
+        type: choice
+        default: full
+        options: [full, effort]
 
 concurrency:
   group: swift-packages-${{ github.ref }}
@@ -74,15 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package:
-          - WhoopProtocol
-          - OuraProtocol
-          - PolarProtocol
-          - WhoopStore
-          - StrandAnalytics
-          - StrandImport
-          - StrandDesign
-          - NoopLocalAccess
+        package: ${{ fromJSON(inputs.validation_scope == 'effort' && '["WhoopProtocol","WhoopStore","StrandAnalytics","StrandDesign"]' || '["WhoopProtocol","OuraProtocol","PolarProtocol","WhoopStore","StrandAnalytics","StrandImport","StrandDesign","NoopLocalAccess"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -107,6 +105,7 @@ jobs:
   # label-for-label. Without this job the port drifts the first time someone edits a coefficient, and the
   # tool keeps printing confident numbers about a recipe that no longer exists. The check needs no dataset.
   tools:
+    if: inputs.validation_scope != 'effort'
     runs-on: macos-15
     strategy:
       fail-fast: false

@@ -70,11 +70,13 @@ struct InsightsHubView: View {
             // crushed the pill control on narrow widths and truncated the segment labels.
             SectionHeader("What moves your \(outcome.outcomeName.lowercased())",
                           overline: "Ranked · your data")
-            #if os(iOS)
-            SegmentedPillControl(InsightsHubViewModel.Outcome.allCases.filter { $0 != .recovery }, selection: $outcome) { $0.label }
-            #else
-            SegmentedPillControl(InsightsHubViewModel.Outcome.allCases, selection: $outcome) { $0.label }
-            #endif
+            Group {
+                #if os(iOS)
+                SegmentedPillControl(InsightsHubViewModel.Outcome.allCases.filter { $0 != .recovery }, selection: $outcome) { $0.label }
+                #else
+                SegmentedPillControl(InsightsHubViewModel.Outcome.allCases, selection: $outcome) { $0.label }
+                #endif
+            }
                 .accessibilityLabel("Outcome metric")
                 .frame(maxWidth: .infinity, alignment: .leading)
 

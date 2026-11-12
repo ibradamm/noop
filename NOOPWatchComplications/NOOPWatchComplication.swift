@@ -4,18 +4,9 @@ import StrandDesign
 
 // MARK: - NOOP watch-face complication
 //
-// The headline feature of M3: Charge (recovery) on the wrist. The iPhone is the brain
-// (M1 computes Charge / Effort / Rest with confidence + provenance); this complication ONLY
-// displays the latest `WatchScoreSnapshot` the phone pushed into the shared app group. It never
-// recomputes a score.
-//
-// The honesty rule carries through from M1: a CALIBRATING score has a nil number plus its
-// Calibrating flag set, and we render a dash with a subtle "cal" marker, never a fabricated
-// number. When there is no snapshot at all we show a NEUTRAL placeholder (a dash + the NOOP
-// glyph), not a zero, so an empty face never reads as "your Charge is 0".
-//
-// Families: accessoryCircular (ring + number), accessoryCorner, accessoryInline (text), and
-// accessoryRectangular (a compact card with all three scores).
+// Displays the phone's marked sleep/effort snapshot; it never recomputes a score. Missing,
+// stale and unmarked legacy snapshots show dashes. The installed kind keeps its old name
+// so existing faces survive an upgrade. Historical recovery payload fields remain decodable.
 
 // MARK: - Snapshot access
 //
@@ -54,11 +45,9 @@ struct ChargeEntry: TimelineEntry {
 }
 
 struct ChargeProvider: TimelineProvider {
-    /// A friendly stand-in for the gallery / first paint. Shows a real-looking Charge so the
-    /// complication previews well, but it is never persisted and the live view falls back to the
-    /// neutral placeholder when there is genuinely no snapshot.
+    /// A loading placeholder may appear on a real face, so it contains no synthetic measurement.
     func placeholder(in context: Context) -> ChargeEntry {
-        ChargeEntry(date: Date(), snapshot: .preview)
+        ChargeEntry(date: Date(), snapshot: nil)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (ChargeEntry) -> Void) {
@@ -81,8 +70,7 @@ struct ChargeProvider: TimelineProvider {
 // MARK: - Preview snapshot
 
 private extension WatchScoreSnapshot {
-    /// A representative snapshot for the widget gallery: a primed Charge, a mid Effort, a calibrating
-    /// Rest (so the gallery also shows the cal marker), a live HR and a short sleep line.
+    /// Synthetic gallery-only values; never used by a live timeline or loading placeholder.
     static var preview: WatchScoreSnapshot {
         WatchScoreSnapshot(
             charge: nil, chargeCalibrating: false,

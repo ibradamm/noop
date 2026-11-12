@@ -1,5 +1,9 @@
 # Personal iOS edition: sleep and effort
 
+For subsequent legacy-route/Watch/export corrections and actual Windows/Linux/native results,
+see [the batch validation record](SLEEP_EFFORT_BATCH_VALIDATION.md). It supersedes the initial
+remaining-work list below where explicitly corrected.
+
 Audit date: 2026-11-12. This is an implementation inventory, not a precision certificate.
 The product has two pillars: sleep and an independent NOOP effort calculation displayed on
 0–21. There is no replacement readiness score. HRV and resting HR remain information.

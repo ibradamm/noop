@@ -52,7 +52,8 @@
 
 **Personal iOS sleep/effort edition:** see the [implementation and validation audit](docs/SLEEP_EFFORT_AUDIT.md),
 [independent effort method](docs/EFFORT_METHOD.md), [validation protocol](docs/SLEEP_EFFORT_VALIDATION.md),
-and [build/test instructions and evidence](docs/SLEEP_EFFORT_TESTING.md). This branch is not a validated release.
+and [build/test instructions and evidence](docs/SLEEP_EFFORT_TESTING.md). The [batch validation record](docs/SLEEP_EFFORT_BATCH_VALIDATION.md)
+tracks exact tested commits, export consistency and remaining device work. This branch is not a validated release.
 
 Pre-built apps you can run right now:
 

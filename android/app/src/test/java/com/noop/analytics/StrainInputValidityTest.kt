@@ -10,13 +10,23 @@ class StrainInputValidityTest {
     private val hr = (0 until 600).map { HrSample(deviceId = "test", ts = it.toLong(), bpm = 160) }
 
     @Test fun compiledSyntheticOracle() {
+        val lines = mutableListOf<String>()
         for ((name, method) in listOf("edwards" to StrainScorer.Method.EDWARDS, "banister" to StrainScorer.Method.BANISTER)) {
             for (sex in listOf("male", "female")) {
                 val score = StrainScorer.strain(hr, maxHR = 190.0, method = method, sex = sex)
                 assertNotNull(score)
-                println("[effort-oracle] $name|$sex|" + String.format(Locale.ROOT, "%.2f", score!!))
+                val line = "[effort-oracle] $name|$sex|" + String.format(Locale.ROOT, "%.2f", score!!)
+                lines.add(line)
+                println(line)
             }
         }
+        // Verbatim compiled Swift stdout: Linux CI job 131540778101, source e6116cf3.
+        assertEquals("""
+            [effort-oracle] edwards|male|38.66
+            [effort-oracle] edwards|female|38.66
+            [effort-oracle] banister|male|35.30
+            [effort-oracle] banister|female|36.19
+        """.trimIndent(), lines.joinToString("\n"))
     }
 
     @Test fun invalidConfigurationIsUnavailableForBothRecipes() {

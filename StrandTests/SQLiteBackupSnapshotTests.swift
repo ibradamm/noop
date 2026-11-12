@@ -51,6 +51,18 @@ final class SQLiteBackupSnapshotTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: destination), original)
     }
 
+    func testCorruptSourceLeavesNoPartialSnapshot() throws {
+        let folder = try temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let source = folder.appendingPathComponent("corrupt.sqlite")
+        let snapshot = folder.appendingPathComponent("snapshot.sqlite")
+        let original = Data("not a SQLite database".utf8)
+        try original.write(to: source)
+        XCTAssertThrowsError(try SQLiteBackupSnapshot.write(source: source, destination: snapshot))
+        XCTAssertEqual(try Data(contentsOf: source), original)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: snapshot.path))
+    }
+
     func testProductionArchiveIncludesCommitsAfterCheckpoint() throws {
         let folder = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }

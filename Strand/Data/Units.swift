@@ -112,7 +112,7 @@ enum UnitPrefs {
     /// mirrors Android's effortDisplayFactor helper so digest sentences match the charts on both.
     static func currentEffortDisplayFactor() -> Double {
         let raw = UserDefaults.standard.string(forKey: effortScaleKey) ?? ""
-        return raw == EffortScale.whoop.rawValue ? 0.21 : 1.0
+        return resolveEffortScale(raw) == .whoop ? UnitFormatter.effortScaleFactor : 1.0
     }
 
     /// Whether the live-HR Live Activity (Lock Screen + Dynamic Island) may show, iOS only (#336).
