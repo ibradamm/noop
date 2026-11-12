@@ -31,9 +31,11 @@ are not added. The logarithmic map is nonlinear.
 Integration uses the next timestamp gap, capped at two minutes, and repeats the final gap.
 One-sample/coincident-time fallback is one second. These conventions approximate intervals;
 they do not observe what happened between samples. The current scorer accepts a dense sample count
-or a sparse sample count plus elapsed span; neither certifies full-day coverage. The engine may
-also apply existing activity/steps/energy floors outside `StrainScorer` (see `AnalyticsEngine.swift`).
-The dashboard reads the actual computed daily output, not a fresh formula reimplemented in UI.
+or a sparse sample count plus elapsed span; neither certifies full-day coverage. The engine
+passes the optional score unchanged into its daily row/result (see the
+[analytics persistence input](../Packages/StrandAnalytics/Sources/StrandAnalytics/AnalyticsEngine.swift)).
+It does not replace a refusal with steps/calorie floors on this path. Legacy live/Today presentation
+has separate carry/max helpers; the personal home reads the exact computed day/source instead.
 
 ## Refusal and calibration policy
 
@@ -42,6 +44,11 @@ nonpositive HR values. This batch adds the invalid-input refusal; it does not re
 or alter the valid-input weights. A genuine observed calm window may score zero. A refused window
 must not be described as zero exertion. The home additionally refuses nonfinite/out-of-domain stored
 scores rather than clipping them to a plausible 0–21 value.
+
+For an actually recomputed day, `MetricsCache.upsertDailyMetrics` writes `strain = excluded.strain`,
+including SQL NULL; a refusal is not merged with an old nonnil score. A pass with no recomputed rows
+deliberately preserves history whose raw inputs may no longer exist. Retained historical caches are
+not retrospectively certified by the new input guard.
 
 The denominator is a mathematical ceiling convention, not a physiological calibration against
 independent reference data. The repository contains denominator-fitting/WHOOP comparison helpers;

@@ -4,6 +4,15 @@ This supersedes the initial testing ledger. No owner health recording was collec
 evaluated. Implementation, compiled software, device operation and physiological accuracy are
 separate states. The latter two remain unvalidated.
 
+**Software gate passed for the tested configuration:** app build `43330250997` at `0da899d8`
+completed both macOS universal/iOS Simulator builds and the hosted Mac suite (2,311 cases, two
+existing skips, zero failures). All seven transactional-export tests and both shared-snapshot tests
+executed successfully. Relevant Swift package tests passed on Mac/Linux at `86cf1ce6`; Android
+build/full tests and its pinned oracle passed at `b00e487b`, with unchanged relevant source verified
+below. Two Windows symlink fixtures remain privilege-blocked locally and pass unchanged on Linux.
+There is no installed-device or physiological-validation claim. First-night instructions are ready
+for use after installation of this exact source.
+
 ## Preserved history
 
 Branch: `sleep-effort-reliability`, based on `design-personnalise` (`6ef61b3d`). No reset, main merge,
@@ -18,6 +27,8 @@ release, tag or health-data artifact publication is part of validation.
 | `e6116cf3e221bd52d55a79a0727031b8bdc80647` | Transactional SQLite export and WAL/concurrency tests; further legacy gates; first SwiftUI compiler fixes; paired diagnostic-contract update; Linux Swift CI. |
 | `b00e487bc6c0b96d7a5812ca024a4cefb779636e` | Remaining SwiftUI fix, pinned compiled Swift/Kotlin oracle, consistent narrative scale, neutral loading placeholders, corrupt-source test and focused manual validation scope. |
 | `86cf1ce6751939a05c7e1ac71a20093a14beece8` | Optional Intel CI fallback and evidence/documentation updates only. Product/test trees are byte-identical to `b00e487b`. |
+| `1dbaa45129c1b052385535f4b829f44638fa9742` | Bound SQLite lock waits instead of progressing-copy duration, add locked-source test and specific existing-file assertion, isolate DEBUG hosted-test UI via the scheme. |
+| `0da899d88c3f3509f9fa0a2db2ef4be0ad9a9483` | Permit the available macOS 26 pool for app validation; no product/test change from `1dbaa451`. |
 
 `personal_catalog_update.py` was a one-use, untracked catalog-editing helper in the parent workspace.
 It was removed: `git ls-files '*catalog_update*'` is empty and
@@ -69,8 +80,10 @@ Do not use `fork-testing-build.yml`, which creates a prerelease.
 | `86cf1ce6` | [App 43326184344](https://github.com/ibradamm/noop/actions/runs/43326184344) | Both app builds passed. Mac tests compiled but host aborted before the first test: `MTLLoader` asserted `Target device architecture is nil`, then SIGABRT. No executed app-test success claimed. |
 | `86cf1ce6` | [Swift 43326187421](https://github.com/ibradamm/noop/actions/runs/43326187421) | Passed: Mac protocol 857 (one skip), storage 645, analytics 2,157, design 137. Linux protocol/store/analytics passed again (857/634/2,157). Compiled oracle agreed on both hosts. |
 | `86cf1ce6` | [Python 43326191400](https://github.com/ibradamm/noop/actions/runs/43326191400) | Passed all six steps, including both real symlinks. |
+| `0da899d8` | [App 43330250997](https://github.com/ibradamm/noop/actions/runs/43330250997) | Passed both builds: Mac universal and iOS Simulator with Watch/complications. Mac suite: 2,311 cases, two existing skips, zero failures; all seven SQLite and both snapshot-compatibility tests passed. |
+| `0da899d8` | [Python 43330254391](https://github.com/ibradamm/noop/actions/runs/43330254391) | All six test steps passed, including night audit and real symlinks. |
 
-The remaining app-test result is pending in this draft. UI/numerical changes were frozen at
+The final Apple gate passed on `0da899d8`. UI/numerical changes were frozen at
 `b00e487b`; the SQLite progress timeout and hosted-test launch received a subsequent targeted fix.
 Subsequent documentation/runner-selection changes do not change product source or assertions.
 Manual Swift
@@ -99,13 +112,27 @@ capture DB. Neither was supplied or published. These are not newly disabled asse
 corpus/integration success is claimed. The two new presentation test functions both executed and
 passed inside StrandDesign's 137-test suite.
 
+`git diff --exit-code 86cf1ce6 0da899d8 -- Packages android Tools` also returned 0. The final Apple
+changes are not being covered by the earlier package/Android green checks; App build on `0da899d8`
+is required for them. Localization, doc-comment and source-reference checks also pass locally after
+the final edits, with no increased allowances.
+
 The Intel app-test failure is a separate observed cause from the earlier queue failures. The
 universal build succeeded and `SQLiteBackupSnapshotTests`/`PersonalSnapshotCompatibilityTests`
 compiled in StrandTests, then the host launched the full product UI/live services and aborted in
 Metal before XCTest execution. The DEBUG-only `NOOP_UNIT_TEST_HOST=1` scheme environment now selects
 empty root/menu content for hosted logic tests. All real UI still compiles in the normal build;
 all test assertions remain enabled. This harness does not establish GPU rendering or device UI
-behavior. The replacement run must prove that the tests actually start and finish.
+behavior. The replacement run `43330250997` printed its test-host marker, executed the complete
+StrandTests suite and finished with `TEST SUCCEEDED`. No Metal validation setting was disabled.
+
+The two existing app-suite skips were inspected: iOS File Data Protection cannot execute in the
+Mac-hosted suite, and the optional Xiaomi import needs `XIAOMI_REAL_DB`. These are unchanged tests;
+neither source was edited or supplied with health data. The seven SQLite tests executed, including
+real concurrent commits (0.516 s) and the locked-source refusal (5.241 s). Both snapshot compatibility
+tests executed. Compile logs name the helper in Strand for x86_64 and arm64, and the new tests in
+StrandTests. Final iOS logs name the helper, Watch glance and complication in both simulator
+architectures. No iPhone runtime operation follows from that build.
 
 ## SQLite export
 
@@ -157,6 +184,12 @@ JSON is captured separately; keep calculation settings stable during pilot expor
 | Insufficient evidence | Existing minimum count/span gate fails: unavailable, `insufficient_coverage`, then existing funnel. 600 samples, or 20 spanning 600 seconds, does not establish continuous wear. |
 | Observed calm input | Valid zero stays zero, distinct from nil/null. |
 
+Downstream inspection confirms `AnalyticsEngine` carries the optional score directly into
+`DailyMetric`/`Result` on Swift and Kotlin. For a recomputed day the daily upsert writes NULL too
+(`strain = excluded.strain`), so it does not retain a former value through COALESCE. No steps/calorie
+floor replaces the refused score on this route. An empty scoring pass preserves older history by
+design; historical caches without replayable raw input are not retroactively validated here.
+
 Compiled oracle: 600 synthetic 160 BPM samples at 1 Hz, HRmax 190, default RHR 60. Stored values:
 Edwards male/female `38.66`; Banister male `35.30`, female `36.19`. Exact stdout copied from Swift
 Linux job `131540778101` into both tests, with invalid/refusal cases asserted separately.
@@ -179,8 +212,9 @@ history is deleted.
 
 ## Prepared first-night protocol — conditional on software success
 
-First pass final builds/tests, then install that exact source. A simulator build does not install
-itself on an iPhone.
+The software gate above is satisfied for the tested configuration. Next install that exact source;
+an unsigned simulator build does not install itself on an iPhone. Device build/signing/installation
+is still required before this protocol can run. No installable IPA or release was published.
 
 1. Update without uninstalling/clearing data. Check Home/Health/More, source labels, missing dashes,
    goals, old links/widgets/notifications. If used, update the Watch and an already-installed face.
