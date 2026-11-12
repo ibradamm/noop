@@ -117,7 +117,15 @@ struct MetricDescriptor: Identifiable, Hashable {
 enum MetricCatalog {
     static let categories = ["Heart", "Charge", "Rest", "Effort", "Health", "Nutrition", "Mind"]
 
-    static let all: [MetricDescriptor] = [
+    static var all: [MetricDescriptor] {
+        #if os(iOS)
+        return descriptors.filter { $0.key != "recovery" }
+        #else
+        return descriptors
+        #endif
+    }
+
+    private static let descriptors: [MetricDescriptor] = [
         // ── Heart
         d("avg_hr", String(localized: "Average Heart Rate"), "Heart", "bpm", "my-whoop", "heart", 0, nil),
         d("max_hr", String(localized: "Max Heart Rate"), "Heart", "bpm", "my-whoop", "bolt.heart", 0, nil),
@@ -251,7 +259,12 @@ enum MetricCatalog {
     static func categoryDisplayName(_ category: String) -> String {
         switch category {
         case "Heart":     return String(localized: "Heart")
-        case "Charge":    return String(localized: "Charge")
+        case "Charge":
+            #if os(iOS)
+            return String(localized: "Health")
+            #else
+            return String(localized: "Charge")
+            #endif
         case "Rest":      return String(localized: "Rest")
         case "Effort":    return String(localized: "Effort")
         case "Health":    return String(localized: "Health")

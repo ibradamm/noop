@@ -120,8 +120,8 @@ struct AskCoachIntent: AppIntent {
     var question: String
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        PendingIntents.appendAskCoach(question: question, at: Date())
-        return .result(dialog: "Opening Coach with your question: \(question)")
+        // Keep old installed shortcuts harmless; this edition has no Coach.
+        return .result(dialog: "Coach is unavailable in this edition.")
     }
 }
 
@@ -145,14 +145,6 @@ struct NOOPShortcuts: AppShortcutsProvider {
                     systemImageName: "waveform.path")
         // K9: "Ask Coach" via Siri — opens Coach with the question and sends it. The question
         // parameter is provided via the Shortcuts app or Siri prompts for it when the phrase fires.
-        AppShortcut(intent: AskCoachIntent(),
-                    phrases: [
-                        "Ask \(.applicationName) about my recovery",
-                        "Ask \(.applicationName) how I'm doing",
-                        "Ask \(.applicationName) Coach",
-                    ],
-                    shortTitle: "Ask Coach",
-                    systemImageName: "sparkles")
     }
 }
 #endif

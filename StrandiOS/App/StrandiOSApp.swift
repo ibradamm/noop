@@ -52,6 +52,11 @@ struct StrandiOSApp: App {
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
 
     init() {
+        // Apply before AppModel or any background scheduler can read a persisted opt-in.
+        UserDefaults.standard.set(false, forKey: "noop.coachEnabled")
+        CoachBriefScheduler.applyMasterSwitch(false)
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["strain-target"])
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["strain-target"])
         // #1008: pin the pre-change Overnight-only default for existing installs before
         // anything reads it. Idempotent; a no-op on fresh installs and after the first launch.
         PuffinExperiment.migrateContinuousHrvOvernightDefault()

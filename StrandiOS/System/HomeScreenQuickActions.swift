@@ -48,7 +48,7 @@ enum HomeScreenQuickAction: String, CaseIterable {
 
     @MainActor
     static func install(in application: UIApplication) {
-        application.shortcutItems = allCases.map(\.shortcutItem)
+        application.shortcutItems = allCases.filter { $0 != .logJournal }.map(\.shortcutItem)
     }
 }
 

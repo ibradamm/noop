@@ -78,6 +78,25 @@ struct ScoringGuideView: View {
     @State private var highlighted: ScoreSection? = nil
 
     var body: some View {
+        #if os(iOS)
+        NavigationStack {
+            ScreenScaffold(title: "Sleep and Effort") {
+                NoopCard {
+                    Text("Sleep is estimated. Stages and nocturnal stress remain experimental.")
+                        .font(StrandFont.body)
+                }
+                NoopCard {
+                    Text("Independent NOOP effort: 0–21 from heart rate and sample intervals. Session scores are not added.")
+                        .font(StrandFont.body)
+                }
+                NoopCard {
+                    Text("Goals are user-selected. Missing data stays unavailable. Software tests do not establish physiological accuracy.")
+                        .font(StrandFont.body)
+                }
+            }
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done", action: onClose) } }
+        }
+        #else
         VStack(spacing: 0) {
             header
                 // Design Reset: a FLAT opaque WHOOP-grey title surface — no scenic hero, no bloom, no
@@ -124,6 +143,7 @@ struct ScoringGuideView: View {
         .noopSheetPresentation(largeFirst: true)
         #endif
         .background(StrandPalette.surfaceBase)
+        #endif
     }
 
     // MARK: - Header / footer

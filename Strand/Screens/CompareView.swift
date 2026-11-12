@@ -134,7 +134,11 @@ struct CompareView: View {
     ]
 
     /// Default starter selection (falls back gracefully if a key is missing).
+    #if os(iOS)
+    private static let defaultKeys = ["strain", "sleep_total_min", "weight"]
+    #else
     private static let defaultKeys = ["recovery", "sleep_performance", "weight"]
+    #endif
 
     // #358 parity (Android ComparePrefs): the time window + the ordered metric selection persist across
     // visits — a UI preference, not `.noopbak` data. Selection is stored as comma-joined descriptor ids

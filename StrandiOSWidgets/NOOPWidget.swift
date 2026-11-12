@@ -44,7 +44,7 @@ struct NOOPWidgetView: View {
     var body: some View {
         switch family {
         case .accessoryCircular:
-            recoveryGauge
+            effortGauge
         case .accessoryInline:
             Text(inlineText)
         case .accessoryRectangular:
@@ -61,10 +61,6 @@ struct NOOPWidgetView: View {
 
     // MARK: - Colours (match Today's GlowRing domain constants)
 
-    private var chargeColor: Color {
-        snap.recovery != nil ? StrandPalette.chargeColor : StrandPalette.textTertiary
-    }
-
     /// Fixed domain accent — same as `TodayView.effortRing` (`StrandPalette.effortColor`), not the
     /// value-sampled `effortTint` ramp the old footer bolt used.
     private var effortColor: Color {
@@ -77,26 +73,28 @@ struct NOOPWidgetView: View {
 
     /// Effort centre/accessory text: pre-formatted #313 display when present, else whole-number 0–100.
     private var effortText: String? {
-        snap.effortDisplay ?? snap.effort.map(String.init)
+        if snap.effortWhoop == true, let text = snap.effortDisplay { return text }
+        // Also handles snapshots written before the personal edition's fixed scale.
+        return snap.effort.map { String(format: "%.1f", Double($0) * 21 / 100) }
     }
 
     private var inlineText: String {
         var parts: [String] = []
-        if let r = snap.recovery { parts.append("Charge \(r)%") }
+        if let e = effortText { parts.append("Effort \(e) / 21") }
         if let b = snap.bpm { parts.append("\(b) bpm") }
         return parts.isEmpty ? "NOOP" : parts.joined(separator: " · ")
     }
 
     // MARK: - Lock Screen accessories
 
-    private var recoveryGauge: some View {
-        Gauge(value: Double(snap.recovery ?? 0), in: 0...100) {
-            Image(systemName: "heart.fill")
+    private var effortGauge: some View {
+        Gauge(value: Double(snap.effort ?? 0), in: 0...100) {
+            Image(systemName: "flame")
         } currentValueLabel: {
-            Text(snap.recovery.map { "\($0)" } ?? "–")
+            Text(effortText ?? "–")
         }
         .gaugeStyle(.accessoryCircular)
-        .tint(chargeColor)
+        .tint(effortColor)
     }
 
     /// Lock-Screen rectangular accessory: Charge · Effort · Rest, same trio as the Home Screen rings.
@@ -113,8 +111,6 @@ struct NOOPWidgetView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             HStack(alignment: .top, spacing: 0) {
-                accessoryScore("Charge", symbol: "figure.mind.and.body",
-                               text: snap.recovery.map { "\($0)%" }, tint: chargeColor)
                 accessoryScore("Effort", symbol: "figure.strengthtraining.traditional",
                                text: effortText, tint: effortColor)
                 accessoryScore("Rest", symbol: "moon.fill",
@@ -247,16 +243,6 @@ struct NOOPWidgetView: View {
     private func scoreRings(diameter: CGFloat, lineWidth: CGFloat, labelFont: Font) -> some View {
         HStack(alignment: .top, spacing: 0) {
             WidgetScoreRing(
-                text: snap.recovery.map(String.init),
-                fraction: snap.recovery.map { Double($0) / 100 },
-                label: "Charge",
-                color: chargeColor,
-                diameter: diameter,
-                lineWidth: lineWidth,
-                labelFont: labelFont,
-                accessibilityOutOf: 100
-            )
-            WidgetScoreRing(
                 text: effortText,
                 // Fill is always the stored 0–100 axis so WHOOP 0–21 and native 0–100 agree on arc length.
                 fraction: snap.effort.map { Double($0) / 100 },
@@ -265,7 +251,7 @@ struct NOOPWidgetView: View {
                 diameter: diameter,
                 lineWidth: lineWidth,
                 labelFont: labelFont,
-                accessibilityOutOf: (snap.effortWhoop == true) ? 21 : 100
+                accessibilityOutOf: 21
             )
             WidgetScoreRing(
                 text: snap.rest.map(String.init),

@@ -310,6 +310,7 @@ struct TrendsView: View {
                     Group {
                         // Week-in-review digest (#208) with prev/next week browsing (#710) — self-hides
                         // only when NO week in history has data. Past weeks render in the same format.
+                        #if !os(iOS)
                         weeklyDigestNav
                             .staggeredAppear(index: 0)
                         // The Charge / Effort / Rest trio, presented in NOOP's pip language.
@@ -319,6 +320,9 @@ struct TrendsView: View {
                             .staggeredAppear(index: 2)
                         heroRecovery(recovery: metrics.recovery)
                             .staggeredAppear(index: 3)
+                        #else
+                        rangeBar(recovery: metrics.strain)
+                        #endif
                         smallMultiples(hrv: metrics.hrv, rhr: metrics.rhr, strain: metrics.strain)
                             .staggeredAppear(index: 4)
                         // Long-horizon training load (CTL/ATL/TSB). Uses the FULL history, not the
@@ -326,10 +330,12 @@ struct TrendsView: View {
                         // chart behind an honest "needs N more days" state until enough history exists.
                         TrainingLoadCard(days: repo.days)
                             .staggeredAppear(index: 5)
+                        #if !os(iOS)
                         yearStrip
                             .staggeredAppear(index: 6)
                         exportReportRow
                             .staggeredAppear(index: 7)
+                        #endif
                     }
                 }
             }

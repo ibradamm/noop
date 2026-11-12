@@ -604,9 +604,14 @@ final class Repository: ObservableObject {
     /// scored row can never re-surface AS today.
     nonisolated static func widgetAnchor(days: [DailyMetric], logicalKey: String, localKey: String) -> DailyMetric? {
         let todayRow = resolveToday(days: days, logicalKey: logicalKey, localKey: localKey)
+        #if os(iOS)
+        // Personal edition: a missing recovery score must never select an older day's effort.
+        return todayRow
+        #else
         if todayRow?.recovery != nil { return todayRow }
         let carriedKey = todayRow?.day ?? logicalKey
         return days.last(where: { $0.recovery != nil && $0.day < carriedKey })
+        #endif
     }
 
     /// Live-clock convenience over the pure `widgetAnchor`: resolves the anchor for `now` (defaults to the

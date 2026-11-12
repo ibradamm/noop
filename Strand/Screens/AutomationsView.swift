@@ -68,7 +68,9 @@ struct AutomationsView: View {
             illnessCard
             healthInsightsCard
             batteryCard
+            #if !os(iOS)
             strainTargetCard
+            #endif
         }
     }
 

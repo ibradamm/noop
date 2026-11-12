@@ -75,7 +75,9 @@ private struct HealthSectionsStack: View {
             // Screen-5 recovery detail: the CONTRIBUTORS to today's recovery as
             // labelled progress bars (HRV / Resting HR / Sleep / Respiratory), each
             // scored against the on-device baseline. Depends only on `repo`.
+            #if !os(iOS)
             RecoveryContributorsSection()
+            #endif
             // The static vitals grid is its own view depending only on `repo`,
             // so it is unaffected by live HR ticks.
             VitalsSection()

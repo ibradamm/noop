@@ -85,11 +85,12 @@ final class LiveActivityController {
     private func refreshBanner(appActive: Bool? = nil) {
         guard let model else { return }
         let connected = model.live.connected
-        let day = model.repo.cachedWidgetAnchor()
         update(bpm: connected ? (model.bpm ?? model.live.heartRate) : nil,
-               recovery: day?.recovery.map { Int($0.rounded()) }, connected: connected, standsAside: standsAside(),
+               recovery: nil, connected: connected, standsAside: standsAside(),
                appActive: appActive ?? (UIApplication.shared.applicationState == .active),
-               effort: day?.strain.map { Int($0.rounded()) })
+               // The legacy daily row can silently prefer an imported score. Until this
+               // high-frequency banner carries exact-source metadata, keep effort absent.
+               effort: nil)
     }
 
     /// Drive the activity from the latest live values (`LiveHRBannerLifecycle` decides start / push / end). Starts

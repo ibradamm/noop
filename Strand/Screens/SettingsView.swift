@@ -283,7 +283,9 @@ struct SettingsView: View {
                     subtitle: "Recovery, HRV tuning, Test Centre, experimental probes, and backup. Tucked away to keep the everyday screen tidy.",
                     isExpanded: $advancedOpen
                 ) {
+                    #if !os(iOS)
                     recoveryCard
+                    #endif
                     hrvCard   // #518: Continuous HRV capture + HRV window moved here out of the always-visible Strap card
                     testCentreCard
                     experimentalCard
@@ -983,6 +985,7 @@ struct SettingsView: View {
                 rowDivider
                 // Effort scale (#268) — show NOOP's native 0–100 Effort or WHOOP's 0–21 Day Strain axis.
                 // Display-only; the stored value never changes, so a flip just re-labels every Effort read-out.
+                #if !os(iOS)
                 FormRow(label: "Effort scale") {
                     Picker("Effort scale", selection: $effortScaleRaw) {
                         Text("0-100").tag(EffortScale.hundred.rawValue)
@@ -993,6 +996,7 @@ struct SettingsView: View {
                     .tint(StrandPalette.accent)
                     .accessibilityLabel("Effort scale")
                 }
+                #endif
 
                 // #1545: directly under the Effort SCALE row on purpose. It shipped in the experimental
                 // block beside the SpO2 and stress-baseline toggles, where the person who asked for it
@@ -1861,7 +1865,9 @@ struct SettingsView: View {
     /// model — a 4.0 owner still needs the export to share decoded streams. The SpO2 candidate card is
     /// split out the same way (see `spo2CandidateCard`'s comment) — it is NOT WHOOP-5/MG-specific.
     @ViewBuilder private var experimentalCard: some View {
+        #if !os(iOS)
         liquidTodayCard
+        #endif
         liveSessionsCard
         // WHOOP 5/MG protocol research now lives in Test Centre. Everyday Settings no longer carries
         // a second copy; the persisted keys and reversible disable actions remain unchanged there.

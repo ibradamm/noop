@@ -48,6 +48,13 @@ struct SmartAlarmView: View {
         ScreenScaffold(title: "Alarms",
                        subtitle: "Your strap wake-alarm and the evening wind-down reminder, in one place.") {
             VStack(alignment: .leading, spacing: NoopMetrics.sectionGap) {
+                #if os(iOS)
+                NoopCard {
+                    Text("Experimental WHOOP 5 alarm. Verify actual vibration before relying on it. No recovery-based wake time.")
+                        .font(StrandFont.caption)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                }
+                #endif
                 windowHero
                 strapAlarmCard
                 strapRejectedCard   // #34: only shows when the strap keeps refusing the alarm

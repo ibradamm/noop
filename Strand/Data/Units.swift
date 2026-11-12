@@ -156,7 +156,12 @@ enum UnitPrefs {
 
     /// Resolve the stored Effort-scale raw value, defaulting to NOOP's native 0–100 axis.
     static func resolveEffortScale(_ raw: String) -> EffortScale {
+        #if os(iOS)
+        // Personal edition uses NOOP's independent calculation on a fixed 0–21 display axis.
+        return .whoop
+        #else
         EffortScale(rawValue: raw) ?? .hundred
+        #endif
     }
 }
 

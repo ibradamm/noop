@@ -30,11 +30,8 @@ struct NOOPLiveActivity: Widget {
                 Spacer()
                 // Charge + Effort (#446) on the banner, mirroring the Dynamic Island expanded stats.
                 HStack(spacing: 12) {
-                    if let r = context.state.recovery {
-                        bannerStat(label: "Charge", value: "\(r)%")
-                    }
                     if let e = context.state.effort {
-                        bannerStat(label: "Effort", value: "\(e)")
+                        bannerStat(label: "Effort", value: String(format: "%.1f / 21", Double(e) * 21 / 100))
                     }
                 }
             }
@@ -50,11 +47,8 @@ struct NOOPLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.trailing) {
                     // Charge + Effort (#446) — one more stat alongside the leading live HR.
                     HStack(spacing: 10) {
-                        if let r = context.state.recovery {
-                            statColumn(label: "Charge", value: "\(r)%")
-                        }
                         if let e = context.state.effort {
-                            statColumn(label: "Effort", value: "\(e)")
+                            statColumn(label: "Effort", value: String(format: "%.1f / 21", Double(e) * 21 / 100))
                         }
                     }
                 }

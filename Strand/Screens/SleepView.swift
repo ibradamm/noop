@@ -164,6 +164,11 @@ struct SleepView: View {
                        onRefresh: { await repo.refresh() },
                        lazy: true,
                        topBackground: resolved == nil ? nil : AnyView(sleepNightTopBackground)) {
+            #if os(iOS)
+            Text("Experimental sleep stages. Sleep latency requires an independently recorded sleep attempt. Nocturnal stress is unvalidated.")
+                .font(StrandFont.caption)
+                .foregroundStyle(StrandPalette.textSecondary)
+            #endif
             Group {
                 if let resolved {
                     // Each top-level section fades + rises in sequence on first appear (Reduce-Motion safe).

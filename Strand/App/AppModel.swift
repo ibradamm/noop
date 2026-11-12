@@ -2099,12 +2099,17 @@ final class AppModel: ObservableObject {
     /// day gate makes this safe to fire on every days republish; nil recovery (calibrating) yields a
     /// nil band → no target → no notification. Android twin: AppViewModel's days-collector call.
     func evaluateStrainTarget() {
+        #if os(iOS)
+        // Personal edition: persisted opt-ins must not revive recovery-based advice.
+        return
+        #else
         guard let row = repo.today else { return }
         StrainTargetNotifier.onDayUpdate(
             day: row.day,
             dayStrain21: row.strain.map { UnitFormatter.effortValue($0, scale: .whoop) },
             target21: CoupledView.optimalStrainRange(recovery: row.recovery)?.lowerBound,
             enabled: behavior.strainTargetNudge)
+        #endif
     }
 
     /// Re-run the illness watch over the cached history. Called when the Automations toggle

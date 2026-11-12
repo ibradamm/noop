@@ -35,7 +35,11 @@ struct InsightsHubView: View {
     @StateObject private var model = InsightsHubViewModel()
 
     /// The currently-selected outcome for the ranked feed (Charge / HRV / Rest / RHR).
+    #if os(iOS)
+    @State private var outcome: InsightsHubViewModel.Outcome = .hrv
+    #else
     @State private var outcome: InsightsHubViewModel.Outcome = .recovery
+    #endif
 
     var body: some View {
         ScreenScaffold(title: "Insights",
@@ -66,7 +70,11 @@ struct InsightsHubView: View {
             // crushed the pill control on narrow widths and truncated the segment labels.
             SectionHeader("What moves your \(outcome.outcomeName.lowercased())",
                           overline: "Ranked · your data")
+            #if os(iOS)
+            SegmentedPillControl(InsightsHubViewModel.Outcome.allCases.filter { $0 != .recovery }, selection: $outcome) { $0.label }
+            #else
             SegmentedPillControl(InsightsHubViewModel.Outcome.allCases, selection: $outcome) { $0.label }
+            #endif
                 .accessibilityLabel("Outcome metric")
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -549,12 +557,20 @@ final class InsightsHubViewModel: ObservableObject {
     /// Per behaviour, the days it was logged NO — the only legitimate control group.
     private var controls: [String: Set<String>] = [:]
     private var outcomeByKey: [String: [String: Double]] = [:]
+    #if os(iOS)
+    private var currentOutcome: Outcome = .hrv
+    #else
     private var currentOutcome: Outcome = .recovery
+    #endif
 
     /// The source id dose rows are parked under (mirrors MoodStore's noop-mood isolation).
     static let doseSource = "noop-journal-dose"
 
+    #if os(iOS)
+    private let outcomeKeys = ["hrv", "sleep_performance", "rhr"]
+    #else
     private let outcomeKeys = ["recovery", "hrv", "sleep_performance", "rhr"]
+    #endif
 
     // MARK: Load
 

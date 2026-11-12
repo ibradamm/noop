@@ -29,6 +29,7 @@ enum TabRoute: Hashable {
     case metricSourced(key: String, source: String)
     case metricExplorer
     case workouts
+    case liftLog
     case dataSources
     case stress
     case sleep
@@ -65,12 +66,18 @@ extension View {
                 }
             case .metricExplorer: MetricExplorerView()
             case .workouts: WorkoutsView()
+            case .liftLog: LiftLogView()
             case .dataSources: DataSourcesView()
             case .stress: StressView()
             case .sleep: SleepView()
             case .health: HealthView()
             case .hydration: HydrationView()
-            case .coupled: CoupledView()
+            case .coupled:
+                #if os(iOS)
+                SleepEffortHomeView()
+                #else
+                CoupledView()
+                #endif
             }
         }
     }
