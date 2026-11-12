@@ -1489,7 +1489,7 @@ def apple_missing_and_format_gaps(
     for _dirs, catalog_path in CATALOGS:
         cat_text = read(catalog_path)
         cat = json.loads(cat_text) if cat_text else {"strings": {}}
-        rel = str(catalog_path.relative_to(ROOT))
+        rel = catalog_path.relative_to(ROOT).as_posix()
         for lang in LANGS:
             keys_missing = {
                 key for key, entry in cat.get("strings", {}).items()
@@ -1609,7 +1609,8 @@ def ci_check(base_ref: str) -> int:
     cur_missing, cur_fmt = apple_missing_and_format_gaps()
     base_missing, base_fmt = apple_missing_and_format_gaps(base_read)
     for _dirs, catalog_path in CATALOGS:
-        rel = str(catalog_path.relative_to(ROOT))
+        # Allowance files use repository paths, independently of the host separator.
+        rel = catalog_path.relative_to(ROOT).as_posix()
         # #844: count the shipped locales OUTSIDE the focus set while the catalog is already parsed,
         # and gate them below. Reloading each catalog for a second pass wasted a full re-parse of a
         # 3255-string file. Deliberately disk-based like the rest of this ratchet (not base_ref-diffed

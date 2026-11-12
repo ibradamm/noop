@@ -131,6 +131,10 @@ jobs:
           fi
         working-directory: Tools
 
+      - name: Run read-only night inventory tests
+        run: python3 -m unittest -v tests.test_night_signal_audit
+        working-directory: Tools
+
       # Parity governance has its own path-filtered workflow because that suite scans the repository and
       # is intentionally much slower. Keep this core floor independent so growth in parity cannot hide
       # accidental deletion here; these six source-reference checks raise it to 114.
