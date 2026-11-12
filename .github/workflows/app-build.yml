@@ -62,7 +62,7 @@ on:
         description: 'macOS validation host; Intel is a fallback for arm64 capacity shortages'
         type: choice
         default: macos-15
-        options: [macos-15, macos-15-intel]
+        options: [macos-15, macos-15-intel, macos-26]
 
 concurrency:
   # Keyed on the PR when one is given, so two probes of the SAME pr supersede each other while probes
