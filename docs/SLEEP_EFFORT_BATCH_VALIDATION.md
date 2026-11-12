@@ -16,6 +16,7 @@ release, tag or health-data artifact publication is part of validation.
 | `b70419c260afa64c7f332dfd688c855db299f90a` | Personal iOS home, independent goals, fixed 0–21 presentation and initial recovery removal. |
 | `15e01d6b8c4f5efd5b725a460a1a8e86b131d4de` | Legacy routes, Watch/widget compatibility, refusal categories, display precision and Windows diagnostic-test corrections. |
 | `e6116cf3e221bd52d55a79a0727031b8bdc80647` | Transactional SQLite export and WAL/concurrency tests; further legacy gates; first SwiftUI compiler fixes; paired diagnostic-contract update; Linux Swift CI. |
+| `b00e487bc6c0b96d7a5812ca024a4cefb779636e` | Remaining SwiftUI fix, pinned compiled Swift/Kotlin oracle, consistent narrative scale, neutral loading placeholders, corrupt-source test and focused manual validation scope. |
 
 `personal_catalog_update.py` was a one-use, untracked catalog-editing helper in the parent workspace.
 It was removed: `git ls-files '*catalog_update*'` is empty and
@@ -60,11 +61,25 @@ Do not use `fork-testing-build.yml`, which creates a prerelease.
 | `e6116cf3` | [Swift 43320844420](https://github.com/ibradamm/noop/actions/runs/43320844420) | Linux passed: Swift 6.4.2 x86_64; protocol 857 (one skip), storage 634, analytics 2,157, zero failures. Mac package legs queued when inspected. |
 | `e6116cf3` | [Python 43320865681](https://github.com/ibradamm/noop/actions/runs/43320865681) | Passed, including both unchanged real-symlink regressions. |
 | `e6116cf3` | [Android 43320852570](https://github.com/ibradamm/noop/actions/runs/43320852570) | Passed; final head must also include the pinned compiled oracle. |
+| `b00e487b` | [App 43323122998](https://github.com/ibradamm/noop/actions/runs/43323122998) | iOS Simulator build passed, both architectures, including Watch/complications and the new SQLite helper. macOS build/tests still queued when inspected. No full-workflow green claim. |
+| `b00e487b` | [Swift 43323127415](https://github.com/ibradamm/noop/actions/runs/43323127415) | Linux passed again: 857 protocol (one skip), 634 storage, 2,157 analytics, zero failures; pinned oracle passed. Three Mac package jobs cancelled without a runner; fourth queued. Unrelated tools outside focused scope. |
+| `b00e487b` | [Android 43323131163](https://github.com/ibradamm/noop/actions/runs/43323131163) | Debug APK and full fresh unit suite passed. Targeted oracle passed and printed exactly the four Swift expected lines. |
+| `b00e487b` | [Python 43323134463](https://github.com/ibradamm/noop/actions/runs/43323134463) | Passed: 234 capture (one skip), 50 governance, two R-R contracts, 17 night inventory, two real symlinks, 154 core tests. |
 
-Final-source native build/test results are pending in this draft. Manual Swift
+Apple build/test results are pending in this draft; the code has been frozen at `b00e487b`.
+Subsequent documentation/runner-selection changes do not change product source or assertions.
+Manual Swift
 `validation_scope=effort` runs the four relevant packages (protocol, storage, analytics, presentation)
 on macOS plus the Linux leg. Normal/full runs retain all packages/tools; no assertions or failure
 gates are relaxed.
+
+The three cancelled Mac jobs (`131548674433`, `131548674824`, `131548674866`) have empty runner
+names and failure annotations: “The job was not acquired by Runner of type hosted even after
+multiple attempts”, plus notices about macOS arm64 capacity constraints. This is direct hosting
+evidence, not an attribution inferred from a failed test. An optional `macos_runner=macos-15-intel`
+fallback is provided using an [official hosted-runner label](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+Defaults remain unchanged. The app still builds both x86_64/arm64; hosted tests execute on the
+chosen host architecture. Cancelled/unstarted tests remain unvalidated until their replacement runs.
 
 ## SQLite export
 

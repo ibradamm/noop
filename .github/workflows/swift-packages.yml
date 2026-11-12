@@ -41,6 +41,11 @@ on:
         type: choice
         default: full
         options: [full, effort]
+      macos_runner:
+        description: 'macOS validation host; Intel is a fallback for arm64 capacity shortages'
+        type: choice
+        default: macos-15
+        options: [macos-15, macos-15-intel]
 
 concurrency:
   group: swift-packages-${{ github.ref }}
@@ -76,7 +81,7 @@ jobs:
           done
 
   test:
-    runs-on: macos-15
+    runs-on: ${{ inputs.macos_runner || 'macos-15' }}
     strategy:
       fail-fast: false
       matrix:
@@ -106,7 +111,7 @@ jobs:
   # tool keeps printing confident numbers about a recipe that no longer exists. The check needs no dataset.
   tools:
     if: inputs.validation_scope != 'effort'
-    runs-on: macos-15
+    runs-on: ${{ inputs.macos_runner || 'macos-15' }}
     strategy:
       fail-fast: false
       matrix:

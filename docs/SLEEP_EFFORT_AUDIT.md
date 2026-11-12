@@ -92,13 +92,13 @@ of the following physiological features was validated on hardware or in precisio
 ## Remaining risks and prioritized work
 
 1. **Build gate before installation:** compile `NOOPiOS` and `Strand`, run native suites. Windows here
-   has no Swift/Xcode/JDK; Docker has no running engine. Source inspection and Python tests cannot
-   prove SwiftUI type correctness or complete navigation coverage.
+   has no native Swift/Xcode/JDK. Remote validation is now running; exact revisions/results are in the
+   batch ledger. Source inspection and Python tests alone cannot prove SwiftUI correctness.
 2. **Complete the removal audit on an iPhone:** traverse onboarding/help, stale deep links, sharing,
-   notifications and existing widgets after upgrade. The embedded Apple Watch application still has
-   the upstream three-score design (`NOOPWatch/`, `NOOPWatchComplications/`, `WatchSessionBridge.swift`)
-   and is not yet adapted. Historical recovery fields remain in storage for compatibility; shared
-   analytics are not deleted. This is not a claim that every legacy surface has been removed.
+   notifications and existing widgets after upgrade. The embedded Watch and complication sources now
+   render sleep/effort only, with compatible payloads and old-cache refusal. Compilation and device
+   evidence are tracked separately. Historical recovery fields and shared analytics are retained.
+   Source changes are not proof that every installed legacy surface has been exercised.
 3. **Collect inputs before tuning:** use the read-only night tool, record firmware/source/window and
    explain gaps. `distinct_seconds` and five-minute occupancy are observations, never continuous wear.
    Nonpositive/NaN checks are structural, not an arbitrary physiological range filter.

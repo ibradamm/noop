@@ -54,11 +54,11 @@ Strand/
 Every package declares **both** `.iOS(.v16)` and `.macOS(.v13)`, so the protocol, storage,
 analytics, import, and design layers compile and run unmodified on iOS once an app target exists.
 Any framework-specific code is guarded with `#if canImport(AppKit) / #elseif canImport(UIKit)`
-(for example the color bridging in `Packages/StrandDesign/Sources/StrandDesign/Palette.swift`).
+(for example the [palette's color bridging](../Packages/StrandDesign/Sources/StrandDesign/Palette.swift)).
 
 | Package          | Platforms                | Key dependencies                          | Responsibility |
 |------------------|--------------------------|-------------------------------------------|----------------|
-| `WhoopProtocol`  | iOS 16+, macOS 13+       | none (bundles `Resources/whoop_protocol.json`) | BLE framing, CRC, command/event/packet decode — the reverse-engineering core |
+| `WhoopProtocol`  | iOS 16+, macOS 13+       | none (bundles the [protocol schema](../Packages/WhoopProtocol/Sources/WhoopProtocol/Resources/whoop_protocol.json)) | BLE framing, CRC, command/event/packet decode — the reverse-engineering core |
 | `WhoopStore`     | iOS 16+, macOS 13+       | `WhoopProtocol`, `GRDB.swift` (≥ 6.0.0)   | SQLite persistence, migrations, decoded streams, metric caches |
 | `StrandAnalytics`| macOS 13+, iOS 16+       | `WhoopProtocol`, `WhoopStore`             | HRV / recovery / strain / sleep / correlation math |
 | `StrandImport`   | macOS 13+, iOS 16+       | `WhoopProtocol`, `WhoopStore`, `ZIPFoundation` (≥ 0.9.0) | WHOOP CSV + Apple Health (`export.xml`, streaming) importers |
@@ -104,9 +104,10 @@ LD_LIBRARY_PATH="$SQLITE_SNAPSHOT_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
   swift test -Xcc -I"$SQLITE_SNAPSHOT_DIR" -Xlinker -L"$SQLITE_SNAPSHOT_DIR"
 ```
 
-This currently runs 1,523 platform-neutral package tests with one intentional skip. It does not run
-iOS simulator/UI tests or Darwin's Compression-backed raw outbox. The existing package CI remains
-macOS-only.
+The Linux leg of `swift-packages.yml` now runs WhoopProtocol, WhoopStore and StrandAnalytics with
+this pinned SQLite build. Exact tested revisions and counts are recorded in
+[the sleep/effort batch ledger](SLEEP_EFFORT_BATCH_VALIDATION.md). It does not run iOS UI tests or
+Darwin's Compression-backed raw outbox. The existing macOS package legs remain enabled.
 
 The same two flags work for the other GRDB-linked packages — swap the `cd` and repeat:
 
@@ -122,7 +123,8 @@ The Compression-backed raw outbox is Darwin-only, so the tests that drive it (`R
 `PruneTests`, and the raw half of `ReadTests.testStorageStats`) compile out off Darwin. Everything they
 cover still runs in the macOS CI job.
 
-Because none of this runs in CI, treat a green Linux run as a convenience rather than a guarantee.
+The other Linux package entries above describe earlier local runs, not additional CI coverage.
+Linux success does not replace the macOS/iOS app builds or hardware tests.
 
 ---
 
@@ -202,7 +204,7 @@ run macOS prompts for Bluetooth permission — the prompt text comes from
 
 ### 4. Pairing & BLE on macOS
 
-NOOP connects over CoreBluetooth (`Strand/BLE/BLEManager.swift`). The central manager is created
+NOOP connects over CoreBluetooth ([BLE manager source](../Strand/BLE/BLEManager.swift)). The central manager is created
 on the main queue:
 
 ```swift
@@ -322,7 +324,8 @@ Toolchain:
 | Build system    | Gradle (Android Gradle Plugin) |
 
 The Android app re-implements the same wire protocol against Android's BLE stack (the protocol
-facts in `WhoopProtocol/Resources/whoop_protocol.json` are language-agnostic). Build and run
+facts in the [shared protocol schema](../Packages/WhoopProtocol/Sources/WhoopProtocol/Resources/whoop_protocol.json)
+are language-agnostic). Build and run
 instructions live in **`android/README.md`** — open the `android/` directory in Android Studio, let
 Gradle sync, and run on a device with Bluetooth (an emulator cannot reach a physical strap).
 
@@ -356,7 +359,7 @@ NOOP builds on prior community reverse-engineering and interoperability work:
   packages are adapted from this work.
 - **`b-nnett/goose`** — WHOOP 5.0 / MG BLE protocol (service family `fd4b0001-…`, CRC16-Modbus
   header) that the WHOOP-5 decode path is ported from.
-- **`groue/GRDB.swift`** — SQLite persistence.
+- **[groue/GRDB](https://github.com/groue/GRDB.swift)** — SQLite persistence.
 - **`weichsel/ZIPFoundation`** — zip handling for Apple Health exports.
 
 See [`ATTRIBUTION.md`](../ATTRIBUTION.md) for full detail.
