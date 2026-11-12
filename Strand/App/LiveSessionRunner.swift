@@ -92,6 +92,11 @@ final class LiveSessionRunner: ObservableObject {
     /// stream (ref-counted in AppModel, balanced by `end()`), banks the in-progress row, and starts
     /// the 1 Hz tick. No-op if already running or already ended.
     func start(model: AppModel, repo: Repository, ble: BLEManager, profile: ProfileStore) {
+        #if os(iOS)
+        // This legacy runner derives its coaching band from recovery. Do not arm it
+        // from a stale route in the personal edition; retain historical session rows.
+        return
+        #else
         guard timer == nil, finalRow == nil else { return }
         self.model = model
         self.repo = repo
@@ -136,6 +141,7 @@ final class LiveSessionRunner: ObservableObject {
         hrSink = model.live.$heartRate.sink { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
+        #endif
     }
 
     // MARK: - End

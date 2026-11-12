@@ -51,7 +51,8 @@ final class WatchScoreStore: NSObject, ObservableObject, WCSessionDelegate {
     static func loadPersisted() -> WatchScoreSnapshot? {
         guard let defaults = UserDefaults(suiteName: suiteName),
               let data = defaults.data(forKey: storageKey),
-              let snap = try? JSONDecoder().decode(WatchScoreSnapshot.self, from: data) else { return nil }
+              let snap = try? JSONDecoder().decode(WatchScoreSnapshot.self, from: data),
+              snap.personalPolicyVersion == PersonalScoreDisplay.policyVersion else { return nil }
         return snap
     }
 
@@ -66,6 +67,7 @@ final class WatchScoreStore: NSObject, ObservableObject, WCSessionDelegate {
     /// Apply a freshly received snapshot: store it, publish to the glance, refresh the complication.
     /// Hops to the main actor because it touches @Published state and WidgetCenter.
     private func apply(_ snap: WatchScoreSnapshot) {
+        guard snap.personalPolicyVersion == PersonalScoreDisplay.policyVersion else { return }
         persist(snap)
         DispatchQueue.main.async {
             self.snapshot = snap

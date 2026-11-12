@@ -45,14 +45,11 @@ struct WatchGlanceView: View {
             HStack(spacing: 8) {
                 // The labels ride a plain String property into ScoreRing, so they must be wrapped HERE;
                 // a bare literal would bypass the string catalog entirely.
-                ScoreRing(label: String(localized: "Charge"), value: snap.charge,
-                          calibrating: snap.chargeCalibrating || stale,
-                          color: StrandPalette.chargeColor)
-                ScoreRing(label: String(localized: "Effort"), value: snap.effort,
-                          calibrating: snap.effortCalibrating || stale,
-                          color: StrandPalette.effortColor)
-                ScoreRing(label: String(localized: "Rest"), value: snap.rest,
-                          calibrating: snap.restCalibrating || stale,
+                ScoreRing(label: String(localized: "Effort"), value: stale ? nil : snap.effort,
+                          calibrating: !stale && snap.effortCalibrating,
+                          color: StrandPalette.effortColor, isEffort: true)
+                ScoreRing(label: String(localized: "Sleep"), value: stale ? nil : snap.rest,
+                          calibrating: !stale && snap.restCalibrating,
                           color: StrandPalette.restColor)
             }
             .frame(maxWidth: .infinity)
@@ -152,6 +149,7 @@ private struct ScoreRing: View {
     let value: Double?
     let calibrating: Bool
     let color: Color
+    var isEffort = false
 
     private let diameter: CGFloat = 52
     private let lineWidth: CGFloat = 6
@@ -168,11 +166,11 @@ private struct ScoreRing: View {
 
     @ViewBuilder
     private var ring: some View {
-        if let value, !calibrating {
+        if let value, value.isFinite, (0...100).contains(value), !calibrating {
             // A real, earned score: the clean filled arc with its SF-Rounded number in the centre.
             GlowRing(fraction: value / 100,
                      value: value,
-                     format: { "\(Int($0.rounded()))" },
+                     format: { isEffort ? (PersonalScoreDisplay.effortText(stored: $0) ?? "–") : "\(Int($0.rounded()))%" },
                      color: color,
                      diameter: diameter,
                      lineWidth: lineWidth)

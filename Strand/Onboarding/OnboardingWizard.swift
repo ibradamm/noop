@@ -288,7 +288,11 @@ private struct WelcomeStep: View {
                     .font(StrandFont.title2)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .opacity(appear ? 1 : 0)
+                #if os(iOS)
+                Text("NOOP estimates · active device · accuracy has not been validated on this strap.")
+                #else
                 Text("A private window into your recovery, sleep and strain. Read straight from your strap, kept only on \(Platform.deviceNounPhrase).")
+                #endif
                     .font(StrandFont.body)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .multilineTextAlignment(.center)
@@ -312,11 +316,21 @@ private struct WhatItDoesStep: View {
         let body: String
     }
 
-    private let slides: [Slide] = [
-        .init(icon: "circle.dashed.inset.filled",
+    private var scoreSlide: Slide {
+        #if os(iOS)
+        return .init(icon: "moon.stars", tint: StrandPalette.restColor,
+              title: String(localized: "Sleep and Effort"),
+              body: String(localized: "Independent NOOP effort: 0–21 from heart rate and sample intervals. Session scores are not added."))
+        #else
+        return .init(icon: "circle.dashed.inset.filled",
               tint: StrandPalette.accent,
               title: String(localized: "See recovery, beautifully"),
-              body: String(localized: "A signature ring distils HRV, resting heart rate and sleep into one calm read on whether to push or rest.")),
+              body: String(localized: "A signature ring distils HRV, resting heart rate and sleep into one calm read on whether to push or rest."))
+        #endif
+    }
+
+    private var slides: [Slide] { [
+        scoreSlide,
         .init(icon: "waveform.path.ecg",
               tint: StrandPalette.accent,
               title: String(localized: "Watch your heart, live"),
@@ -325,7 +339,7 @@ private struct WhatItDoesStep: View {
               tint: StrandPalette.statusPositive,
               title: String(localized: "Own your data, offline"),
               body: String(localized: "Everything lives on \(Platform.deviceNounPhrase). No account, no sync, no cloud. Your thread is yours alone.")),
-    ]
+    ] }
 
     var body: some View {
         StepShell(title: String(localized: "What NOOP does"), subtitle: String(localized: "Three quiet promises.")) {
@@ -853,8 +867,8 @@ private struct ImportStep: View {
                 InfoCard(
                     icon: "clock.arrow.circlepath",
                     tint: StrandPalette.accent,
-                    title: String(localized: "History fills the dashboard immediately"),
-                    message: String(localized: "A WHOOP export backfills recovery, strain, sleep and workouts. Apple Health can add HR, HRV, sleep, SpO₂, steps, workouts and weight.")
+                    title: String(localized: "Data Sources"),
+                    message: String(localized: "Commercial comparison kept separate from the NOOP calculation.")
                 )
 
                 StrandCard {

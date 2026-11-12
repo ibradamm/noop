@@ -703,11 +703,19 @@ object StrainScorer {
     ): Double? {
         val resolvedDenominator = denominator ?: logMapDenominator(method, sex)
         val effMax = maxHR ?: defaultMaxHR().toDouble()
-        // Invalid configuration or corrupt HR must be unavailable, not a calm-day zero.
-        // This validates numeric domains only; it does not certify physiological accuracy.
+        // Separate a bad profile/recipe from rejected samples and insufficient evidence.
+        // No physiological upper BPM threshold is invented here.
         if (!effMax.isFinite() || !restingHR.isFinite() || restingHR <= 0.0 ||
-            !resolvedDenominator.isFinite() || resolvedDenominator <= 1.0 || hr.any { it.bpm <= 0 }) {
-            diag?.invoke("[strain-input] refused=invalid_numeric_input")
+            effMax <= restingHR || !resolvedDenominator.isFinite() || resolvedDenominator <= 1.0) {
+            diag?.invoke("[strain-input] refused=invalid_configuration")
+            return null
+        }
+        val rejected = hr.count { it.bpm <= 0 }
+        if (rejected != 0) {
+            // Dropping a row here would join its neighbours and credit the gap to the
+            // earlier HR. Without a rejection mask the integrator cannot preserve that
+            // missing interval, so refuse this window rather than silently bridging it.
+            diag?.invoke("[strain-input] refused=rejected_hr_samples count=$rejected")
             return null
         }
         // Enough data to trust the score: a dense stream (≥ minReadings) OR a sparse-but-sustained
@@ -720,7 +728,8 @@ object StrainScorer {
             }
             else -> false
         }
-        if (!enoughData || effMax <= restingHR) {
+        if (!enoughData) {
+            diag?.invoke("[strain-input] refused=insufficient_coverage")
             // The refusal is the half a bare number cannot show: null here and 0.0 on a calm day look
             // identical on the ring, and only one of them is a measurement.
             diag?.let {

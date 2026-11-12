@@ -200,8 +200,17 @@ struct LiveWorkoutView: View {
     /// Centered Effort stack — same `liveStrain` / Effort-scale conversion and `StrainGauge` intensity
     /// label as before. Card chrome and side-by-side layout removed so the value sits as a free hero
     /// metric between heart rate and the zone rail. Display-only; captured value stays 0–100.
-    private var effortGauge: some View {
-        let strain = model.activeWorkout?.liveStrain ?? 0
+    @ViewBuilder private var effortGauge: some View {
+        if let strain = model.activeWorkout?.liveStrain,
+           PersonalScoreDisplay.effortValue(stored: strain) != nil {
+            knownEffortGauge(strain: strain)
+        } else {
+            Text("Unavailable").font(StrandFont.title1)
+                .foregroundStyle(StrandPalette.textSecondary)
+        }
+    }
+
+    private func knownEffortGauge(strain: Double) -> some View {
         let displayEffort = UnitFormatter.effortValue(strain, scale: effortScale)
         let maxValue = effortScale == .whoop ? 21.0 : 100.0
         let fraction = min(max(displayEffort / maxValue, 0), 1)
@@ -283,6 +292,7 @@ struct LiveWorkoutView: View {
 
     private var statsGrid: some View {
         let w = model.activeWorkout
+        let validStrain = (w?.liveStrain).flatMap { PersonalScoreDisplay.effortValue(stored: $0) == nil ? nil : $0 }
         return NoopCard(padding: NoopMetrics.cardInnerPadding) {
             HStack(spacing: 0) {
                 stat(String(localized: "AVG"), (w?.avgHr ?? 0) > 0 ? "\(w!.avgHr)" : "—",
@@ -291,8 +301,8 @@ struct LiveWorkoutView: View {
                 stat(String(localized: "PEAK"), (w?.peakHr ?? 0) > 0 ? "\(w!.peakHr)" : "—",
                      tint: (w?.peakHr ?? 0) > 0 ? StrandPalette.metricRose : StrandPalette.textPrimary)
                 statDivider
-                stat(String(localized: "EFFORT"), UnitFormatter.effortDisplay(w?.liveStrain ?? 0, scale: effortScale),
-                     tint: StrandPalette.strainColor(w?.liveStrain ?? 0))
+                stat(String(localized: "EFFORT"), validStrain.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "—",
+                     tint: validStrain.map { StrandPalette.strainColor($0) } ?? StrandPalette.textSecondary)
             }
         }
     }

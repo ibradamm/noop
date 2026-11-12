@@ -111,8 +111,9 @@ struct SyncStrapIntent: LiveActivityIntent {
 /// to the configured provider and surfaces the response. The question is spoken or typed in Siri;
 /// the app handles the actual network call using the user's saved key.
 struct AskCoachIntent: AppIntent {
+    static var isDiscoverable = false
     static var title: LocalizedStringResource = "Ask Coach"
-    static var description = IntentDescription("Ask your NOOP Coach a question about your recovery, sleep, or training.")
+    static var description = IntentDescription("Coach is unavailable in this edition.")
     static var openAppWhenRun = true
 
     /// The question to ask, populated by Siri from the user's spoken phrase.

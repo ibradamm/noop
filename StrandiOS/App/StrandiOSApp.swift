@@ -578,23 +578,23 @@ enum DemoScreens {
         let args = CommandLine.arguments
         guard let i = args.firstIndex(of: "--demo-screen"), i + 1 < args.count else { return nil }
         switch args[i + 1].lowercased() {
-        case "today":    return AnyView(TodayView())
+        case "today":    return AnyView(SleepEffortHomeView())
         // The DEFAULT iOS Today (`noop.liquidTodayEnabled` ships true), so it needs its own entry — plain
         // "today" renders the CLASSIC screen, which is exactly the screen whose behaviour Liquid was found
         // to have diverged from. Without this, the default Today was the one screen the harness could not
         // capture.
-        case "liquidtoday": return AnyView(LiquidTodayView())
+        case "liquidtoday": return AnyView(SleepEffortHomeView())
         case "trends":   return AnyView(TrendsView())
         case "sleep":    return AnyView(SleepView())
         case "live":     return AnyView(LiveView())
         case "stress":   return AnyView(StressView())
         case "workouts": return AnyView(WorkoutsView())
         case "health":   return AnyView(HealthView())
-        case "insights": return AnyView(InsightsView())
+        case "insights": return AnyView(SleepEffortHomeView())
         case "explore":  return AnyView(MetricExplorerView())
         case "compare":  return AnyView(CompareView())
         case "settings": return AnyView(SettingsView())
-        case "chargebreakdown": return AnyView(ChargeBreakdownDemoHost())
+        case "chargebreakdown": return AnyView(SleepEffortHomeView())
         case "devices":  return AnyView(DevicesView())
         case "devicescatalog": return AnyView(DeviceCardCatalog())
         case "fitnessage": return AnyView(FitnessAgeDemoScreen())

@@ -136,48 +136,28 @@ final class WatchSessionBridge: NSObject, ObservableObject {
         let now = Date()
         let day = Repository.widgetAnchor(days: days, now: now)
 
-        // Rest (sleep_performance) for that same anchor day. exploreSeries merges imported + on-device,
-        // exactly like the Today Rest tile and the widget. The tail fallback (restSeries.last) is ONLY
-        // valid when the anchor day IS the local today: early in a fresh day today's Rest row may not
-        // exist yet, so we borrow the latest known value. For an anchor that is NOT today, borrowing the
-        // tail would surface a DIFFERENT day's Rest as this day's without any cal marker (the cross-day
-        // bug), so we leave it nil and let restCalibrating flag it honestly. #977: the tail is ALSO gated on
-        // freshness now — a live 5.0 whose sleep never scores used to push a weeks-old Rest to the watch
-        // forever; a stale tail falls through to nil so the watch shows its honest calibrating state. Mirrors
-        // TodayView.freshRestScore.
-        var restScore: Double?
-        if let day {
-            let restSeries = await model.repo.exploreSeries(key: "sleep_performance", source: model.deviceId)
-            let restByDay = Dictionary(restSeries.map { ($0.day, $0.value) }, uniquingKeysWith: { _, last in last })
-            let anchorIsToday = day.day == Repository.localDayKey(now)
-            restScore = TodayView.freshRestScore(
-                todayValue: restByDay[day.day], lastDay: restSeries.last?.day,
-                lastValue: restSeries.last?.value, isTodaySelected: anchorIsToday, todayKey: day.day)
-        }
-
-        // The honesty rule: a missing number that is genuinely mid-calibration is flagged so the watch
-        // shows a cal marker, not a dash that looks like an outage. We treat "no number for the anchor
-        // day" as calibrating only when there is at least some day data to calibrate FROM. With no day
-        // at all (a fresh, never-synced phone) the flags stay false and the watch shows its neutral
-        // "open NOOP on your iPhone" empty state instead of implying calibration is underway.
-        let hasAnyDay = day != nil
-        let charge = day?.recovery
-        let effort = day?.strain
-        let rest = restScore
+        // Personal scores have exact day/source reads. Missing effort is not baseline calibration.
+        let key = Repository.logicalDayKey(now)
+        let source = model.repo.deviceId + "-noop"
+        let localEffort = await model.repo.resolvedSeries(key: "strain", source: source, from: key, to: key)
+        let effort = localEffort.points.first { $0.day == key && PersonalScoreDisplay.effortValue(stored: $0.value) != nil }?.value
+        let localRest = await model.repo.resolvedSeries(key: "sleep_performance", source: source, from: key, to: key)
+        let rest = localRest.points.first { $0.day == key && $0.value.isFinite && (0...100).contains($0.value) }?.value
 
         let snap = WatchScoreSnapshot(
-            charge: charge,
-            chargeCalibrating: hasAnyDay && charge == nil,
+            charge: nil,
+            chargeCalibrating: false,
             effort: effort,
-            effortCalibrating: hasAnyDay && effort == nil,
+            effortCalibrating: false,
             rest: rest,
-            restCalibrating: hasAnyDay && rest == nil,
+            restCalibrating: false,
             hr: model.bpm ?? model.live.heartRate,
             sleepSummary: sleepSummary(for: day),
             asOf: Date(),
             // The day the scores are ABOUT (not when we built this), so the watch can label recency
             // honestly ("Yesterday") even when the build is fresh. nil when there's no anchor day at all.
-            scoreDay: day?.day
+            scoreDay: key,
+            personalPolicyVersion: PersonalScoreDisplay.policyVersion
         )
         return snap
     }

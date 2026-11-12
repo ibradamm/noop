@@ -310,12 +310,12 @@ struct RootTabView: View {
                 case .liveSession: SleepEffortHomeView()
                 // .journal opens through the quick-action Journal sheet (handled above); this keeps the
                 // switch exhaustive and falls back to the journal's Insights host if it ever reaches here.
-                case .journal: InsightsView()
+                case .journal: SleepEffortHomeView()
                 // .coach switches to the Coach tab (handled above — the morning-brief tap-through and the
                 // #1862 launcher both arrive that way, the launcher's question riding on
                 // `AICoachEngine.pendingPrompt`); this keeps the switch exhaustive and falls back to Coach if
                 // it ever reaches the host.
-                case .coach: CoachView()
+                case .coach: SleepEffortHomeView()
                 case .alarms: SmartAlarmView()
                 }
             }
@@ -361,7 +361,7 @@ struct RootTabView: View {
         case .workout:
             quickScreen(WorkoutsView())
         case .journal:
-            quickScreen(InsightsView())
+            quickScreen(SleepEffortHomeView())
         case .breathe:
             quickScreen(BreathingView())
         }
@@ -580,9 +580,9 @@ private enum MoreDestination: Hashable {
     @ViewBuilder var destination: some View {
         switch self {
         case .insightsHub:     InsightsHubView()
-        case .intelligence:    IntelligenceView()
-        case .coach:           CoachView()
-        case .insights:        InsightsView()
+        case .intelligence:    SleepEffortHomeView()
+        case .coach:           SleepEffortHomeView()
+        case .insights:        SleepEffortHomeView()
         case .explore:         MetricExplorerView()
         case .compare:         CompareView()
         case .live:            LiveView()

@@ -1,6 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Sleep": {"localizations": {"de": {"stringUnit": {"state": "translated", "value": "Schlaf"}}, "en": {"stringUnit": {"state": "translated", "value": "Sleep"}}, "es": {"stringUnit": {"state": "translated", "value": "Sueño"}}, "fr": {"stringUnit": {"state": "translated", "value": "Sommeil"}}, "it": {"stringUnit": {"state": "translated", "value": "Sonno"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Sono"}}, "ru": {"stringUnit": {"state": "translated", "value": "Сон"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "睡眠"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "睡眠"}}, "pl": {"stringUnit": {"state": "translated", "value": "Sen"}}}},
+    "Sleep and Effort": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Sleep and Effort"}}, "fr": {"stringUnit": {"state": "translated", "value": "Sommeil et Effort"}}, "de": {"stringUnit": {"state": "translated", "value": "Schlaf und Belastung"}}, "es": {"stringUnit": {"state": "translated", "value": "Sueño y esfuerzo"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Sono e esforço"}}, "it": {"stringUnit": {"state": "translated", "value": "Sonno e sforzo"}}, "pl": {"stringUnit": {"state": "translated", "value": "Sen i wysiłek"}}, "ru": {"stringUnit": {"state": "translated", "value": "Сон и нагрузка"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "睡眠与负荷"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "睡眠與負荷"}}}},
     "%@ %lld": {
       "localizations": {
         "de": {

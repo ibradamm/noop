@@ -21,6 +21,9 @@ public struct WidgetSnapshot: Codable, Equatable {
     public var effortDisplay: String?
     /// True when `effortDisplay` is on WHOOP's 0–21 axis; false/nil means 0–100. Accessibility only.
     public var effortWhoop: Bool?
+    /// Additive optional fields preserve old integer wire values while retaining display precision.
+    public var effortStored: Double?
+    public var personalPolicyVersion: Int?
     /// The last `HrTrace.windowSec` of heart rate, one point per minute, for the trace widget (#1957).
     ///
     /// Folded in by `save()` rather than by the callers that build a snapshot, which is the twin of the
@@ -45,7 +48,7 @@ public struct WidgetSnapshot: Codable, Equatable {
                 effort: Int? = nil, rest: Int? = nil, hrv: Int? = nil, restingHr: Int? = nil,
                 effortDisplay: String? = nil, effortWhoop: Bool? = nil,
                 hrSeries: [HrPoint]? = nil, stressSeries: [StressPoint]? = nil,
-                stressDay: Int? = nil) {
+                stressDay: Int? = nil, effortStored: Double? = nil, personalPolicyVersion: Int? = nil) {
         self.recovery = recovery
         self.bpm = bpm
         self.batteryPct = batteryPct
@@ -57,6 +60,8 @@ public struct WidgetSnapshot: Codable, Equatable {
         self.restingHr = restingHr
         self.effortDisplay = effortDisplay
         self.effortWhoop = effortWhoop
+        self.effortStored = effortStored
+        self.personalPolicyVersion = personalPolicyVersion
         self.hrSeries = hrSeries
         self.stressSeries = stressSeries
         self.stressDay = stressDay
@@ -218,6 +223,8 @@ public struct WidgetSnapshot: Codable, Equatable {
             || previous.batteryPct != next.batteryPct
             || previous.bonded != next.bonded
             || previous.effort != next.effort
+            || previous.effortStored != next.effortStored
+            || previous.personalPolicyVersion != next.personalPolicyVersion
             || previous.rest != next.rest
             || previous.hrv != next.hrv
             || previous.restingHr != next.restingHr

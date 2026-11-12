@@ -135,6 +135,13 @@ jobs:
         run: python3 -m unittest -v tests.test_night_signal_audit
         working-directory: Tools
 
+      - name: Verify both real symlink regression cases
+        run: >-
+          python3 -m unittest -v
+          tests.test_parity_ledger.ParityLedgerTests.test_base_semantic_state_survives_a_symlinked_temp_root
+          tests.test_parity_ledger.ParityLedgerTests.test_expand_twin_map_accepts_a_symlinked_root
+        working-directory: Tools
+
       # Parity governance has its own path-filtered workflow because that suite scans the repository and
       # is intentionally much slower. Keep this core floor independent so growth in parity cannot hide
       # accidental deletion here; these six source-reference checks raise it to 114.

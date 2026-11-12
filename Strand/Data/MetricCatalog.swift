@@ -115,6 +115,13 @@ struct MetricDescriptor: Identifiable, Hashable {
 /// Canonical catalog — mirrors the WHOOP "Trend View" plus Apple Health body metrics.
 /// Keys match exactly what the importers write into metricSeries.
 enum MetricCatalog {
+    private static var effortDescription: String {
+        #if os(iOS)
+        return String(localized: "Independent NOOP effort: 0–21 from heart rate and sample intervals. Session scores are not added.")
+        #else
+        return String(localized: "Cardiovascular load for the day, on a 0-100 scale (was 0-21).")
+        #endif
+    }
     static let categories = ["Heart", "Charge", "Rest", "Effort", "Health", "Nutrition", "Mind"]
 
     static var all: [MetricDescriptor] {
@@ -163,7 +170,7 @@ enum MetricCatalog {
 
         // ── Effort (was Strain)
         d("strain", String(localized: "Effort"), "Effort", "/100", "my-whoop", "flame", 1, nil,
-          String(localized: "Cardiovascular load for the day, on a 0-100 scale (was 0-21).")),
+          effortDescription),
         d("steps", String(localized: "Steps"), "Effort", "", "apple-health", "figure.walk", 0, true),
         // WHOOP 5.0 / MG exposes a measured daily step count. Declared AFTER apple-health on purpose:
         // the bare-key `first { key == "steps" }` resolvers (LabBookView, CompareView, the TabRoute

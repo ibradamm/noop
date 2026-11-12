@@ -667,12 +667,19 @@ public enum StrainScorer {
                                        method: Method, sex: String, denominator: Double,
                                        diag: ((String) -> Void)? = nil, day: String = "") -> Double? {
         let effMax = maxHR ?? Double(defaultMaxHR())
-        // Invalid configuration or corrupt HR must be unavailable, not a calm-day zero.
-        // This validates numeric domains only; it does not certify physiological accuracy.
+        // Separate a bad profile/recipe from rejected samples and insufficient evidence.
+        // No physiological upper BPM threshold is invented here.
         guard effMax.isFinite, restingHR.isFinite, restingHR > 0,
-              denominator.isFinite, denominator > 1,
-              hr.allSatisfy({ $0.bpm > 0 }) else {
-            diag?("[strain-input] refused=invalid_numeric_input")
+              effMax > restingHR, denominator.isFinite, denominator > 1 else {
+            diag?("[strain-input] refused=invalid_configuration")
+            return nil
+        }
+        let rejected = hr.filter { $0.bpm <= 0 }.count
+        guard rejected == 0 else {
+            // Dropping a row here would join its neighbours and credit the gap to the
+            // earlier HR. Without a rejection mask the integrator cannot preserve that
+            // missing interval, so refuse this window rather than silently bridging it.
+            diag?("[strain-input] refused=rejected_hr_samples count=\(rejected)")
             return nil
         }
         // Enough data to trust the score: a dense stream (≥ minReadings) OR a sparse-but-sustained
@@ -686,7 +693,8 @@ public enum StrainScorer {
         } else {
             enoughData = false
         }
-        if !enoughData || effMax <= restingHR {
+        if !enoughData {
+            diag?("[strain-input] refused=insufficient_coverage")
             // The refusal is the half a bare number cannot show: nil here and 0.0 on a calm day look
             // identical on the ring, and only one of them is a measurement.
             diag?(scoreFunnelLine(day: day, hrSamples: hr.count, enough: enoughData, maxHR: effMax,

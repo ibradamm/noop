@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -74,7 +74,7 @@ class SourceReferenceTests(unittest.TestCase):
         self.assertEqual(1, code)
         self.assertEqual(2, len(lines))
         self.assertEqual(
-            f"FAIL {doc}:2 ../Sources/Client.swift [missing] symbol not found",
+            f"FAIL {doc.as_posix()}:2 ../Sources/Client.swift [missing] symbol not found",
             lines[0],
         )
         self.assertEqual("checked 1 references, 1 files, 1 failures", lines[1])
@@ -89,7 +89,7 @@ class SourceReferenceTests(unittest.TestCase):
 
         self.assertEqual(1, code)
         self.assertEqual(
-            f"FAIL {doc}:1 ../Sources/Missing.swift file does not exist",
+            f"FAIL {doc.as_posix()}:1 ../Sources/Missing.swift file does not exist",
             lines[0],
         )
         self.assertEqual("checked 1 references, 1 files, 1 failures", lines[1])
@@ -101,7 +101,7 @@ class SourceReferenceTests(unittest.TestCase):
 
         self.assertEqual(1, code)
         self.assertEqual(
-            f"FAIL {doc}:1 ../Sources/missing.py file does not exist",
+            f"FAIL {doc.as_posix()}:1 ../Sources/missing.py file does not exist",
             lines[0],
         )
         self.assertEqual("checked 1 references, 1 files, 1 failures", lines[1])
@@ -121,10 +121,16 @@ class SourceReferenceTests(unittest.TestCase):
 
         self.assertEqual(1, code)
         self.assertEqual(
-            f"FAIL {doc}:1 ../Sources/Client.swift [decode] symbol not found",
+            f"FAIL {doc.as_posix()}:1 ../Sources/Client.swift [decode] symbol not found",
             lines[0],
         )
         self.assertEqual("checked 1 references, 1 files, 1 failures", lines[1])
+
+    def test_external_windows_diagnostic_path_has_portable_separators(self) -> None:
+        # The public diagnostic format is POSIX on every host. Keep exact messages,
+        # line numbers, error exit codes and symbol checks in the failure tests above.
+        path = PureWindowsPath("Z:/synthetic/docs/PROTOCOL.md")
+        self.assertEqual("Z:/synthetic/docs/PROTOCOL.md", check_source_references.display_path(path))
 
     def test_repository_protocol_document_passes_smoke_check(self) -> None:
         result = subprocess.run(

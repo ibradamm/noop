@@ -5,6 +5,16 @@ import WhoopProtocol
 final class StrainInputValidityTests: XCTestCase {
     private let hr = (0..<600).map { HRSample(ts: $0, bpm: 160) }
 
+    func testCompiledSyntheticOracle() {
+        for (name, method) in [("edwards", StrainScorer.Method.edwards), ("banister", .banister)] {
+            for sex in ["male", "female"] {
+                let score = StrainScorer.strain(hr, maxHR: 190, method: method, sex: sex)
+                XCTAssertNotNil(score)
+                print("[effort-oracle] \(name)|\(sex)|" + score.map { String(format: "%.2f", $0) }!)
+            }
+        }
+    }
+
     func testInvalidConfigurationIsUnavailableForBothRecipes() {
         for method in [StrainScorer.Method.edwards, .banister] {
             for invalid in [Double.nan, .infinity, -.infinity] {
@@ -37,6 +47,22 @@ final class StrainInputValidityTests: XCTestCase {
         XCTAssertGreaterThan(StrainScorer.strain(hr, maxHR: 190) ?? 0, 0)
         var lines: [String] = []
         XCTAssertNil(StrainScorer.strain(hr, maxHR: .nan, diag: { lines.append($0) }))
-        XCTAssertEqual(lines, ["[strain-input] refused=invalid_numeric_input"])
+        XCTAssertEqual(lines, ["[strain-input] refused=invalid_configuration"])
+    }
+
+    func testRefusalReasonsDistinguishSamplesCoverageAndConfiguration() {
+        for method in [StrainScorer.Method.edwards, .banister] {
+            var rejected = hr
+            rejected[60] = HRSample(ts: 60, bpm: 0)
+            var lines: [String] = []
+            XCTAssertNil(StrainScorer.strain(rejected, maxHR: 190, method: method, diag: { lines.append($0) }))
+            XCTAssertEqual(lines.first, "[strain-input] refused=rejected_hr_samples count=1")
+            lines = []
+            XCTAssertNil(StrainScorer.strain(Array(hr.prefix(19)), maxHR: 190, method: method, diag: { lines.append($0) }))
+            XCTAssertEqual(lines.first, "[strain-input] refused=insufficient_coverage")
+            lines = []
+            XCTAssertNil(StrainScorer.strain(hr, maxHR: 60, restingHR: 60, method: method, diag: { lines.append($0) }))
+            XCTAssertEqual(lines.first, "[strain-input] refused=invalid_configuration")
+        }
     }
 }

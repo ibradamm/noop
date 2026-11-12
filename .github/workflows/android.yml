@@ -65,4 +65,7 @@ jobs:
         run: ./gradlew assembleFullDebug
 
       - name: Run unit tests
-        run: ./gradlew testFullDebugUnitTest
+        run: ./gradlew testFullDebugUnitTest --no-build-cache --rerun-tasks
+
+      - name: Emit synthetic effort oracle for cross-language comparison
+        run: ./gradlew testFullDebugUnitTest --tests com.noop.analytics.StrainInputValidityTest.compiledSyntheticOracle --info

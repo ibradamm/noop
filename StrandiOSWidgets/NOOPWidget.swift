@@ -15,13 +15,16 @@ struct NOOPProvider: TimelineProvider {
 
     func getSnapshot(in context: Context, completion: @escaping (NOOPEntry) -> Void) {
         let fallback: WidgetSnapshot = context.isPreview ? .placeholder : .unavailable
-        completion(NOOPEntry(date: Date(), snapshot: WidgetSnapshot.load() ?? fallback))
+        let stored = WidgetSnapshot.load()
+        let trusted = stored?.personalPolicyVersion == PersonalScoreDisplay.policyVersion ? stored : nil
+        completion(NOOPEntry(date: Date(), snapshot: trusted ?? fallback))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<NOOPEntry>) -> Void) {
         // Gallery previews use `placeholder(in:)` / getSnapshot's preview branch. A real timeline
         // with no shared snapshot must show missing data honestly, never plausible sample numbers.
-        let snap = WidgetSnapshot.load() ?? .unavailable
+        let stored = WidgetSnapshot.load()
+        let snap = stored?.personalPolicyVersion == PersonalScoreDisplay.policyVersion ? (stored ?? .unavailable) : .unavailable
         // Refresh roughly every 15 minutes; the app also forces a reload when it publishes fresh data.
         let next = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date().addingTimeInterval(900)
         completion(Timeline(entries: [NOOPEntry(date: Date(), snapshot: snap)], policy: .after(next)))
@@ -40,6 +43,7 @@ struct NOOPWidgetView: View {
     let entry: NOOPEntry
 
     private var snap: WidgetSnapshot { entry.snapshot }
+    private var storedEffort: Double? { snap.effortStored ?? snap.effort.map(Double.init) }
 
     var body: some View {
         switch family {
@@ -73,9 +77,7 @@ struct NOOPWidgetView: View {
 
     /// Effort centre/accessory text: pre-formatted #313 display when present, else whole-number 0–100.
     private var effortText: String? {
-        if snap.effortWhoop == true, let text = snap.effortDisplay { return text }
-        // Also handles snapshots written before the personal edition's fixed scale.
-        return snap.effort.map { String(format: "%.1f", Double($0) * 21 / 100) }
+        PersonalScoreDisplay.effortText(stored: storedEffort)
     }
 
     private var inlineText: String {
@@ -88,7 +90,7 @@ struct NOOPWidgetView: View {
     // MARK: - Lock Screen accessories
 
     private var effortGauge: some View {
-        Gauge(value: Double(snap.effort ?? 0), in: 0...100) {
+        Gauge(value: PersonalScoreDisplay.effortValue(stored: storedEffort) ?? 0, in: 0...21) {
             Image(systemName: "flame")
         } currentValueLabel: {
             Text(effortText ?? "–")
@@ -245,7 +247,7 @@ struct NOOPWidgetView: View {
             WidgetScoreRing(
                 text: effortText,
                 // Fill is always the stored 0–100 axis so WHOOP 0–21 and native 0–100 agree on arc length.
-                fraction: snap.effort.map { Double($0) / 100 },
+                fraction: PersonalScoreDisplay.effortValue(stored: storedEffort).map { $0 / 21 },
                 label: "Effort",
                 color: effortColor,
                 diameter: diameter,
