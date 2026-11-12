@@ -667,6 +667,14 @@ public enum StrainScorer {
                                        method: Method, sex: String, denominator: Double,
                                        diag: ((String) -> Void)? = nil, day: String = "") -> Double? {
         let effMax = maxHR ?? Double(defaultMaxHR())
+        // Invalid configuration or corrupt HR must be unavailable, not a calm-day zero.
+        // This validates numeric domains only; it does not certify physiological accuracy.
+        guard effMax.isFinite, restingHR.isFinite, restingHR > 0,
+              denominator.isFinite, denominator > 1,
+              hr.allSatisfy({ $0.bpm > 0 }) else {
+            diag?("[strain-input] refused=invalid_numeric_input")
+            return nil
+        }
         // Enough data to trust the score: a dense stream (≥ minReadings) OR a sparse-but-sustained
         // one spanning ≥ minSpanSeconds with a sample floor (#482 — the 5/MG's ~30 s HR cadence).
         let enoughData: Bool

@@ -703,6 +703,13 @@ object StrainScorer {
     ): Double? {
         val resolvedDenominator = denominator ?: logMapDenominator(method, sex)
         val effMax = maxHR ?: defaultMaxHR().toDouble()
+        // Invalid configuration or corrupt HR must be unavailable, not a calm-day zero.
+        // This validates numeric domains only; it does not certify physiological accuracy.
+        if (!effMax.isFinite() || !restingHR.isFinite() || restingHR <= 0.0 ||
+            !resolvedDenominator.isFinite() || resolvedDenominator <= 1.0 || hr.any { it.bpm <= 0 }) {
+            diag?.invoke("[strain-input] refused=invalid_numeric_input")
+            return null
+        }
         // Enough data to trust the score: a dense stream (≥ minReadings) OR a sparse-but-sustained
         // one spanning ≥ minSpanSeconds with a sample floor (#482 — the 5/MG's ~30 s HR cadence).
         val enoughData = when {
