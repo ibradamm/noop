@@ -59,9 +59,17 @@ private struct WatchMetric: Identifiable {
     let metric: String
     let confidence: Confidence
     let detail: String
+    var recoveryRelated = false
 }
 
 struct AppleWatchAboutView: View {
+    private var visibleMetrics: [WatchMetric] {
+        #if os(iOS)
+        return metrics.filter { !$0.recoveryRelated }
+        #else
+        return metrics
+        #endif
+    }
     /// Optional hook so the page can present the setup/permission flow. The About page links to
     /// it as its primary call to action; left nil (e.g. on macOS, which has no HealthKit) the
     /// button is hidden and the page reads as pure reference content.
@@ -89,7 +97,7 @@ struct AppleWatchAboutView: View {
                     detail: String(localized: "Heart rate plus active energy give a solid daily cardiovascular load. An on-watch workout sharpens it further.")),
         WatchMetric(icon: "heart.fill", metric: String(localized: "Recovery / Charge"),
                     confidence: .calibrating,
-                    detail: String(localized: "Led by your heart-rate variability versus your own baseline. The watch samples HRV rather than streaming it, so this needs about a week of nights to calibrate. Until then NOOP shows \u{201C}needs more data\u{201D}, never a guessed number.")),
+                    detail: String(localized: "Led by your heart-rate variability versus your own baseline. The watch samples HRV rather than streaming it, so this needs about a week of nights to calibrate. Until then NOOP shows \u{201C}needs more data\u{201D}, never a guessed number."), recoveryRelated: true),
         WatchMetric(icon: "thermometer.medium", metric: String(localized: "Skin temperature"),
                     confidence: .good,
                     detail: String(localized: "From the watch's wrist-temperature sensor during sleep, on Series 8 and later. Older models don't have the sensor, so it reads \u{201C}not available\u{201D} rather than zero.")),
@@ -105,7 +113,9 @@ struct AppleWatchAboutView: View {
             VStack(alignment: .leading, spacing: NoopMetrics.sectionGap) {
                 introCard
                 capabilityCard
+                #if !os(iOS)
                 hrvCard
+                #endif
                 spo2Card
                 if let onStartSetup {
                     startCard(onStartSetup)
@@ -133,7 +143,13 @@ struct AppleWatchAboutView: View {
                         .foregroundStyle(StrandPalette.textPrimary)
                     Spacer(minLength: 0)
                 }
+                Group {
+                #if os(iOS)
+                Text("Goals are user-selected. Missing data stays unavailable. Software tests do not establish physiological accuracy.")
+                #else
                 Text("NOOP can run off only an Apple Watch, no chest strap needed. The watch is the sensor; NOOP does the thinking on your phone, computing Charge, Rest, Effort and your Fitness Age from your Health data, all on-device.")
+                #endif
+                }
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -160,7 +176,7 @@ struct AppleWatchAboutView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(metrics.enumerated()), id: \.element.id) { index, item in
+                    ForEach(Array(visibleMetrics.enumerated()), id: \.element.id) { index, item in
                         if index > 0 {
                             Divider().overlay(StrandPalette.hairline)
                                 .padding(.vertical, 12)

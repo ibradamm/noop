@@ -12,8 +12,9 @@ import ZIPFoundation
 /// Full-database EXPORT / IMPORT for device migration.
 ///
 /// NOOP keeps everything in one SQLite file (`<AppSupport>/OpenWhoop/whoop.sqlite`, plus the
-/// `-wal`/`-shm` WAL sidecars while the store is open). Export checkpoints the WAL (so the
-/// single file is whole), then wraps the SQLite in a ZIP written as `.noopbak`, alongside a
+/// `-wal`/`-shm` WAL sidecars while the store is open). Export checkpoints the WAL, then takes
+/// a transactional online snapshot including subsequent committed WAL pages and wraps it in
+/// a ZIP written as `.noopbak`, alongside a
 /// small `settings.json` entry (#1000) carrying the whitelisted profile/display settings (see
 /// `BackupSettings`) so a restore also brings back weight/height/units, not just the rows.
 /// ZIP deflate typically cuts a 100 MB+ SQLite backup to 10–20 MB. The format is a standard
@@ -61,13 +62,13 @@ enum DataBackup {
 
     // MARK: - Export
 
-    /// Checkpoint the store and write the live database as a compressed `.noopbak` (single-entry
-    /// ZIP) to a user-chosen file.
+    /// Checkpoint the store and archive a transactional snapshot as a compressed `.noopbak`
+    /// to a user-chosen file.
     ///
     /// - Parameter checkpoint: invoked first to flush the WAL into the main file. Pass
-    ///   `repo.checkpointForBackup`. Must succeed — a failed checkpoint means committed pages still
-    ///   live in the WAL and would be silently absent from the ZIP; we fail loudly rather than ship
-    ///   a partial backup.
+    ///   `repo.checkpointForBackup`. The existing checkpoint refusal is retained. A checkpoint
+    ///   alone does not freeze the store: the online snapshot also includes committed WAL pages
+    ///   visible when its read transaction starts.
     @MainActor
     static func runExport(checkpoint: @escaping () async -> Bool) async -> BackupResult {
         let dbPath: String
@@ -79,8 +80,8 @@ enum DataBackup {
             return .failure(String(localized: "There's no NOOP data to export yet. Import or record some first."))
         }
 
-        // Flush the WAL so the single .sqlite carries everything. Required for ZIP (no sidecar
-        // fallback in a single-file archive).
+        // Retain the existing checkpoint safety gate; snapshotting below closes the race with
+        // writes that resume after this checkpoint or while the destination picker is open.
         guard await checkpoint() else {
             return .failure(String(localized: "Couldn't safely export right now. Recent changes are still in the database's write-ahead log. Close any in-flight sync, then try again."))
         }
@@ -160,13 +161,6 @@ enum DataBackup {
         }
     }
 
-    /// The production export path: verify, then archive. GRDB checkpoints the WAL first (the
-    /// callers' `checkpoint()` guard), so at this point the single file IS the whole store — run a
-    /// read-only `PRAGMA quick_check` over it BEFORE zipping (#1014). Archiving an already-corrupt
-    /// database writes a `.noopbak` that only fails the import-side integrity gate months later,
-    /// when the original data may be long gone; failing loudly NOW is the honest move. The read-only
-    /// probe sits safely beside the app's open GRDB pool (WAL allows concurrent readers).
-    /// `writeBackupForTesting` deliberately bypasses this so tests can build damaged containers.
     /// `.exported`, or `.exportedOversize` when the database is past the ceiling the restore path
     /// enforces. Measured on the DATABASE, not the finished archive: the archive is `.deflate`d and the
     /// cap the restore checks counts the DECOMPRESSED stream, so the zip's own size says nothing about
@@ -222,11 +216,19 @@ enum DataBackup {
         verifyWrittenBackup(at: url) == .intact
     }
 
-    private static func writeVerifiedBackupZip(dbURL: URL, to dest: URL, settingsJSON: Data?) throws {
-        if let complaint = DatabaseIntegrity.quickCheckFailure(atPath: dbURL.path) {
+    /// Production export path, also exercised by synthetic WAL/concurrent-write tests. The live
+    /// database is never zipped directly: verify an isolated online snapshot, then archive it.
+    /// `writeBackupForTesting` deliberately bypasses this to construct damaged ZIP fixtures.
+    static func writeVerifiedBackupZip(dbURL: URL, to dest: URL, settingsJSON: Data?) throws {
+        let staging = FileManager.default.temporaryDirectory.appendingPathComponent("noop-snapshot-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: false)
+        defer { try? FileManager.default.removeItem(at: staging) }
+        let snapshot = staging.appendingPathComponent("snapshot.sqlite")
+        try SQLiteBackupSnapshot.write(source: dbURL, destination: snapshot)
+        if let complaint = DatabaseIntegrity.quickCheckFailure(atPath: snapshot.path) {
             throw ExportIntegrityFailure(complaint: complaint)
         }
-        try writeBackupZip(dbURL: dbURL, to: dest, settingsJSON: settingsJSON, manifestJSON: currentManifestJSON())
+        try writeBackupZip(dbURL: snapshot, to: dest, settingsJSON: settingsJSON, manifestJSON: currentManifestJSON())
         switch verifyWrittenBackup(at: dest) {
         case .intact:
             break
@@ -299,9 +301,9 @@ enum DataBackup {
     }
 
     /// (Backup & Sync) Write a `.noopbak` to a SPECIFIC `dest` URL with NO save panel: the folder /
-    /// auto-backup path. Checkpoints the WAL (so the single `.sqlite` is whole) then writes the same
-    /// deflate ZIP via the same `writeBackupZip` the interactive export uses, so folder / auto backups
-    /// are byte-identical to a manual export. The CALLER owns any security-scoped access to `dest`
+    /// auto-backup path. Checkpoints, then uses the same isolated online snapshot and verified
+    /// deflate ZIP path as interactive export. Folder / auto backups keep the same container format.
+    /// The CALLER owns any security-scoped access to `dest`
     /// (start/stop around this call). Never presents UI, so it is safe off the main actor.
     static func writeBackup(checkpoint: @escaping () async -> Bool, to dest: URL) async -> BackupResult {
         let dbPath: String
@@ -312,8 +314,7 @@ enum DataBackup {
         guard FileManager.default.fileExists(atPath: dbPath) else {
             return .failure(String(localized: "There's no NOOP data to export yet."))
         }
-        // Flush the WAL into the single file (same requirement as the interactive export: a single-file
-        // ZIP has no sidecar fallback, so committed pages still in the WAL would otherwise be absent).
+        // Preserve the checkpoint refusal; the subsequent snapshot also covers later WAL commits.
         guard await checkpoint() else {
             return .failure(String(localized: "Couldn't safely back up right now. Recent changes are still in the write-ahead log."))
         }

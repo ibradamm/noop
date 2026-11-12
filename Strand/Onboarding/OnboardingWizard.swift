@@ -288,11 +288,13 @@ private struct WelcomeStep: View {
                     .font(StrandFont.title2)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .opacity(appear ? 1 : 0)
+                Group {
                 #if os(iOS)
                 Text("NOOP estimates · active device · accuracy has not been validated on this strap.")
                 #else
                 Text("A private window into your recovery, sleep and strain. Read straight from your strap, kept only on \(Platform.deviceNounPhrase).")
                 #endif
+                }
                     .font(StrandFont.body)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .multilineTextAlignment(.center)

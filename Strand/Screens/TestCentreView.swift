@@ -213,7 +213,13 @@ struct TestCentreView: View {
                 Text("Each test logs extra detail for one part of the app while you wear the strap, then bundles it for a bug report.")
                     .font(StrandFont.caption).foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                let modes = TestCentreLayout.visibleModes(is5MG: is5MG)
+                let modes = TestCentreLayout.visibleModes(is5MG: is5MG).filter {
+                    #if os(iOS)
+                    $0.domain != .recovery
+                    #else
+                    true
+                    #endif
+                }
                 ForEach(Array(modes.enumerated()), id: \.element.id) { idx, mode in
                     if idx > 0 { Divider().overlay(StrandPalette.hairline) }
                     TestModeRow(mode: mode, report: report)
@@ -349,12 +355,14 @@ struct TestCentreView: View {
 
                 // Recalibrate Charge baseline: the same Baselines.recalibrateRecoveryBaselines call the
                 // Settings Recovery card uses.
+                #if !os(iOS)
                 NoopButton("Recalibrate Charge baseline", systemImage: "arrow.triangle.2.circlepath", kind: .secondary) {
                     showRecalibrateConfirm = true
                 }
                 Text("Re-anchors every baseline that feeds Charge to your recent nights. No stored day is deleted.")
                     .font(StrandFont.caption).foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                #endif
 
                 Divider().overlay(StrandPalette.hairline)
 
@@ -727,6 +735,7 @@ struct TestCentreView: View {
 
                 Divider().overlay(StrandPalette.hairline)
 
+                #if !os(iOS)
                 Toggle(isOn: $hrvReadinessEnabled) {
                     Text("HRV readiness (Plews/Altini)")
                         .font(StrandFont.subhead).foregroundStyle(StrandPalette.textPrimary)
@@ -739,6 +748,7 @@ struct TestCentreView: View {
                 // The toggle's OWN effect, shown in place: when on, the live Plews/Altini reading. Nothing
                 // renders when off, so the flag off is zero behaviour change and feeds no downstream gate.
                 if hrvReadinessEnabled { hrvReadinessReadout }
+                #endif
             }
         }
     }

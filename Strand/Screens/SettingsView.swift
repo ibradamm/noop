@@ -1021,11 +1021,13 @@ struct SettingsView: View {
                     // candidate and HRV-window toggles (analyzeRecent → refresh).
                     Task { await model.intelligence.analyzeRecent(); await model.repo.refresh() }
                 }
+                Group {
                 #if os(iOS)
                 Text("Independent NOOP effort: 0–21 from heart rate and sample intervals. Session scores are not added.")
                 #else
                 Text("Scores Effort on an exponential intensity curve (Banister TRIMP) instead of the default heart-rate zones (Edwards). The default earns nothing below half of your heart-rate reserve, so an hour of lifting — where hard sets average out against the rests — can score close to zero. The exponential curve has no floor and weights short, hard efforts far more heavily. Re-scores your history, and both scales reach the same maximum. Off by default.")
                 #endif
+                }
                     .font(StrandFont.caption)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -2409,11 +2411,13 @@ struct SettingsView: View {
                             Text("How your scores work")
                                 .font(StrandFont.body)
                                 .foregroundStyle(StrandPalette.textPrimary)
+                            Group {
                             #if os(iOS)
                             Text("Sleep and Effort")
                             #else
                             Text("Charge, Effort and Rest (and how they differ from WHOOP).")
                             #endif
+                            }
                                 .font(StrandFont.footnote)
                                 .foregroundStyle(StrandPalette.textTertiary)
                                 .fixedSize(horizontal: false, vertical: true)

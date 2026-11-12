@@ -57,8 +57,12 @@ enum CoachBriefScheduler {
     /// would have disabled the Coach for every install that had never opened the toggle, which is exactly
     /// the population whose behaviour must not change.
     static var coachMasterEnabled: Bool {
+        #if os(iOS)
+        return false
+        #else
         guard UserDefaults.standard.object(forKey: "noop.coachEnabled") != nil else { return true }
         return UserDefaults.standard.bool(forKey: "noop.coachEnabled")
+        #endif
     }
 
     /// Tear down whatever the brief has left lying around when the Coach master switch goes off.

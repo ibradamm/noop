@@ -38,8 +38,9 @@ final class EffortScoreFunnelTests: XCTestCase {
         var emitted: [String] = []
         XCTAssertNil(StrainScorer.strain(hr))
         XCTAssertNil(StrainScorer.strain(hr, diag: { emitted.append($0) }, day: "2026-08-31"))
-        XCTAssertEqual(emitted.count, 1)
-        XCTAssertTrue(emitted[0].hasPrefix("effort score day=2026-08-31 "), emitted[0])
+        XCTAssertEqual(emitted.count, 2)
+        XCTAssertEqual(emitted[0], "[strain-input] refused=insufficient_coverage")
+        XCTAssertTrue(emitted[1].hasPrefix("effort score day=2026-08-31 "), emitted[1])
     }
 
     // MARK: - Per-zone minutes (#2438)

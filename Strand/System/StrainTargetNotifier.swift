@@ -58,6 +58,9 @@ enum StrainTargetNotifier {
     /// day marker advances only after an authorized post, so a notifications-denied day still notifies
     /// once they're re-enabled while the same day still shows the reached target (Android twin behaviour).
     static func onDayUpdate(day: String, dayStrain21: Double?, target21: Int?, enabled: Bool) {
+        #if os(iOS)
+        return
+        #else
         let d = UserDefaults.standard
         guard StrainTargetPolicy.shouldNotify(enabled: enabled,
                                               dayStrain: dayStrain21,
@@ -78,5 +81,6 @@ enum StrainTargetNotifier {
             center.add(UNNotificationRequest(identifier: "strain-target", content: content, trigger: nil))
             UserDefaults.standard.set(day, forKey: lastDayKey)
         }
+        #endif
     }
 }

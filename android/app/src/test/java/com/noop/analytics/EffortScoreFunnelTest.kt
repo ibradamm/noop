@@ -58,8 +58,9 @@ class EffortScoreFunnelTest {
         // Too little data either way, so the scores match; the point is that one emits and one does not.
         assertNull(StrainScorer.strain(hr))
         assertNull(StrainScorer.strain(hr, diag = { emitted.add(it) }, day = "2026-08-31"))
-        assertEquals(1, emitted.size)
-        assertEquals(true, emitted[0].startsWith("effort score day=2026-08-31 "))
+        assertEquals(2, emitted.size)
+        assertEquals("[strain-input] refused=insufficient_coverage", emitted[0])
+        assertEquals(true, emitted[1].startsWith("effort score day=2026-08-31 "))
     }
 
     // ---- Per-zone minutes (#2438) ----

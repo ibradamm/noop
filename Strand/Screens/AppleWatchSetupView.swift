@@ -158,7 +158,7 @@ struct AppleWatchSetupView: View {
                             .foregroundStyle(StrandPalette.textPrimary)
                         Spacer(minLength: 0)
                     }
-                    Text("No chest strap? No problem. NOOP can run off only your Apple Watch. It reads your watch's data through Apple Health and works out your Charge, Rest, Effort and Fitness Age right here on your phone. Everything stays on the device.")
+                    Text("Sleep and Effort")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -298,7 +298,7 @@ struct AppleWatchSetupView: View {
                     }
 
                 case .authorized:
-                    Text("You're connected. NOOP is reading your Apple Watch data now. Your Charge score will spend its first week or so calibrating, then settle in.")
+                    Text("Goals are user-selected. Missing data stays unavailable. Software tests do not establish physiological accuracy.")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
