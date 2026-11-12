@@ -47,7 +47,10 @@ final class SQLiteBackupSnapshotTests: XCTestCase {
         let destination = folder.appendingPathComponent("existing.sqlite")
         let original = Data("existing private file".utf8)
         try original.write(to: destination)
-        XCTAssertThrowsError(try SQLiteBackupSnapshot.write(source: folder.appendingPathComponent("missing.sqlite"), destination: destination))
+        XCTAssertThrowsError(try SQLiteBackupSnapshot.write(source: folder.appendingPathComponent("missing.sqlite"), destination: destination)) { error in
+            XCTAssertEqual((error as NSError).domain, NSCocoaErrorDomain)
+            XCTAssertEqual((error as NSError).code, CocoaError.fileWriteFileExists.rawValue)
+        }
         XCTAssertEqual(try Data(contentsOf: destination), original)
     }
 
@@ -82,6 +85,24 @@ final class SQLiteBackupSnapshotTests: XCTestCase {
         _ = try archive.extract(entry, to: extracted)
         XCTAssertEqual(try integers("SELECT COUNT(*) FROM sample", at: extracted), [2])
         XCTAssertNil(DatabaseIntegrity.quickCheckFailure(atPath: extracted.path))
+    }
+
+    func testLockedSourceIsRefusedWithoutLeavingAPartialSnapshot() throws {
+        let folder = try temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let source = folder.appendingPathComponent("locked.sqlite")
+        let snapshot = folder.appendingPathComponent("snapshot.sqlite")
+        var db: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(source.path, &db), SQLITE_OK)
+        defer { sqlite3_close(db) }
+        XCTAssertEqual(sqlite3_exec(db, "PRAGMA journal_mode=DELETE; CREATE TABLE sample(id INTEGER); INSERT INTO sample VALUES(1); BEGIN EXCLUSIVE;", nil, nil, nil), SQLITE_OK)
+        XCTAssertThrowsError(try SQLiteBackupSnapshot.write(source: source, destination: snapshot)) { error in
+            XCTAssertEqual((error as NSError).domain, "NOOP.SQLiteSnapshot")
+            XCTAssertTrue([Int(SQLITE_BUSY), Int(SQLITE_LOCKED)].contains((error as NSError).code))
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: snapshot.path))
+        XCTAssertEqual(sqlite3_exec(db, "ROLLBACK", nil, nil, nil), SQLITE_OK)
+        XCTAssertEqual(try integers("SELECT COUNT(*) FROM sample", at: source), [1])
     }
 
     func testConcurrentWalTransactionsCannotTearTheSnapshot() throws {

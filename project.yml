@@ -531,6 +531,10 @@ schemes:
       config: Debug
     test:
       config: Debug
+      # Hosted logic tests do not render the production UI or start its live services. Keep all
+      # assertions enabled; CI's separate build above still compiles the full app UI in both arches.
+      environmentVariables:
+        NOOP_UNIT_TEST_HOST: "1"
       targets:
         - StrandTests
   NOOPiOS:

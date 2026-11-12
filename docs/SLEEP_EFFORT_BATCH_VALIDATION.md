@@ -17,6 +17,7 @@ release, tag or health-data artifact publication is part of validation.
 | `15e01d6b8c4f5efd5b725a460a1a8e86b131d4de` | Legacy routes, Watch/widget compatibility, refusal categories, display precision and Windows diagnostic-test corrections. |
 | `e6116cf3e221bd52d55a79a0727031b8bdc80647` | Transactional SQLite export and WAL/concurrency tests; further legacy gates; first SwiftUI compiler fixes; paired diagnostic-contract update; Linux Swift CI. |
 | `b00e487bc6c0b96d7a5812ca024a4cefb779636e` | Remaining SwiftUI fix, pinned compiled Swift/Kotlin oracle, consistent narrative scale, neutral loading placeholders, corrupt-source test and focused manual validation scope. |
+| `86cf1ce6751939a05c7e1ac71a20093a14beece8` | Optional Intel CI fallback and evidence/documentation updates only. Product/test trees are byte-identical to `b00e487b`. |
 
 `personal_catalog_update.py` was a one-use, untracked catalog-editing helper in the parent workspace.
 It was removed: `git ls-files '*catalog_update*'` is empty and
@@ -61,25 +62,50 @@ Do not use `fork-testing-build.yml`, which creates a prerelease.
 | `e6116cf3` | [Swift 43320844420](https://github.com/ibradamm/noop/actions/runs/43320844420) | Linux passed: Swift 6.4.2 x86_64; protocol 857 (one skip), storage 634, analytics 2,157, zero failures. Mac package legs queued when inspected. |
 | `e6116cf3` | [Python 43320865681](https://github.com/ibradamm/noop/actions/runs/43320865681) | Passed, including both unchanged real-symlink regressions. |
 | `e6116cf3` | [Android 43320852570](https://github.com/ibradamm/noop/actions/runs/43320852570) | Passed; final head must also include the pinned compiled oracle. |
-| `b00e487b` | [App 43323122998](https://github.com/ibradamm/noop/actions/runs/43323122998) | iOS Simulator build passed, both architectures, including Watch/complications and the new SQLite helper. macOS build/tests still queued when inspected. No full-workflow green claim. |
-| `b00e487b` | [Swift 43323127415](https://github.com/ibradamm/noop/actions/runs/43323127415) | Linux passed again: 857 protocol (one skip), 634 storage, 2,157 analytics, zero failures; pinned oracle passed. Three Mac package jobs cancelled without a runner; fourth queued. Unrelated tools outside focused scope. |
+| `b00e487b` | [App 43323122998](https://github.com/ibradamm/noop/actions/runs/43323122998) | Workflow failed due to unacquired Mac runner. iOS Simulator leg passed, both architectures, including Watch/complications and new SQLite helper. Mac build/tests did not run. |
+| `b00e487b` | [Swift 43323127415](https://github.com/ibradamm/noop/actions/runs/43323127415) | Workflow failed due to four unacquired Mac runners. Linux passed: protocol 857 (one skip), storage 634, analytics 2,157, zero failures; pinned oracle passed. Unrelated tools outside focused scope. |
 | `b00e487b` | [Android 43323131163](https://github.com/ibradamm/noop/actions/runs/43323131163) | Debug APK and full fresh unit suite passed. Targeted oracle passed and printed exactly the four Swift expected lines. |
 | `b00e487b` | [Python 43323134463](https://github.com/ibradamm/noop/actions/runs/43323134463) | Passed: 234 capture (one skip), 50 governance, two R-R contracts, 17 night inventory, two real symlinks, 154 core tests. |
+| `86cf1ce6` | [App 43326184344](https://github.com/ibradamm/noop/actions/runs/43326184344) | Both app builds passed. Mac tests compiled but host aborted before the first test: `MTLLoader` asserted `Target device architecture is nil`, then SIGABRT. No executed app-test success claimed. |
+| `86cf1ce6` | [Swift 43326187421](https://github.com/ibradamm/noop/actions/runs/43326187421) | Passed: Mac protocol 857 (one skip), storage 645, analytics 2,157, design 137. Linux protocol/store/analytics passed again (857/634/2,157). Compiled oracle agreed on both hosts. |
+| `86cf1ce6` | [Python 43326191400](https://github.com/ibradamm/noop/actions/runs/43326191400) | Passed all six steps, including both real symlinks. |
 
-Apple build/test results are pending in this draft; the code has been frozen at `b00e487b`.
+The remaining app-test result is pending in this draft. UI/numerical changes were frozen at
+`b00e487b`; the SQLite progress timeout and hosted-test launch received a subsequent targeted fix.
 Subsequent documentation/runner-selection changes do not change product source or assertions.
 Manual Swift
 `validation_scope=effort` runs the four relevant packages (protocol, storage, analytics, presentation)
 on macOS plus the Linux leg. Normal/full runs retain all packages/tools; no assertions or failure
 gates are relaxed.
 
-The three cancelled Mac jobs (`131548674433`, `131548674824`, `131548674866`) have empty runner
+All four cancelled Mac package jobs (`131548674433`, `131548674745`, `131548674824`, `131548674866`)
+and the cancelled Mac app job (`131548860395`) have empty runner
 names and failure annotations: “The job was not acquired by Runner of type hosted even after
 multiple attempts”, plus notices about macOS arm64 capacity constraints. This is direct hosting
 evidence, not an attribution inferred from a failed test. An optional `macos_runner=macos-15-intel`
 fallback is provided using an [official hosted-runner label](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 Defaults remain unchanged. The app still builds both x86_64/arm64; hosted tests execute on the
 chosen host architecture. Cancelled/unstarted tests remain unvalidated until their replacement runs.
+
+`git diff --exit-code b00e487b 86cf1ce6 -- Packages Strand StrandTests StrandiOS StrandiOSShared
+StrandiOSWidgets NOOPWatch NOOPWatchComplications android Tools project.yml` returned 0. Therefore
+the Android result on `b00e487b` is tied to identical Android source/tests and cross-language fixtures;
+it is not being used to validate the modified Apple runner selection. That selection is executed by
+the `86cf1ce6` workflows themselves.
+
+Existing conditional skips were inspected: protocol `testFullCorpusDecodesWithPublishedInvariants`
+requires the private `WHOOP_R20_CORPUS`; Python `test_integration_real_db_if_present` requires a real
+capture DB. Neither was supplied or published. These are not newly disabled assertions, and no real
+corpus/integration success is claimed. The two new presentation test functions both executed and
+passed inside StrandDesign's 137-test suite.
+
+The Intel app-test failure is a separate observed cause from the earlier queue failures. The
+universal build succeeded and `SQLiteBackupSnapshotTests`/`PersonalSnapshotCompatibilityTests`
+compiled in StrandTests, then the host launched the full product UI/live services and aborted in
+Metal before XCTest execution. The DEBUG-only `NOOP_UNIT_TEST_HOST=1` scheme environment now selects
+empty root/menu content for hosted logic tests. All real UI still compiles in the normal build;
+all test assertions remain enabled. This harness does not establish GPU rendering or device UI
+behavior. The replacement run must prove that the tests actually start and finish.
 
 ## SQLite export
 
@@ -92,6 +118,8 @@ holds one read transaction across online-backup steps, includes committed WAL pa
 that snapshot starts, then finalizes a standalone destination in DELETE journal mode. Later commits
 continue outside the fixed snapshot. Busy/locked/incomplete/error results refuse export. Existing
 destinations are preserved; failed staging is removed; source records are unchanged.
+The five-second deadline bounds continuous busy/locked retries, not the total duration of a large
+copy that is making progress.
 
 [The production export path](../Strand/Data/DataBackup.swift) checks the isolated snapshot before archiving,
 retains existing post-write/restore checks and cleans its private staging directory. Historical rows,
@@ -108,6 +136,9 @@ guarantee. Archive decoding remains cross-platform compatible.
   must match, all 512 padding rows remain, source reaches revision 40, integrity passes, and no
   destination WAL is required.
 - Missing/corrupt source refusal, preserved source, no partial destination, existing-file preservation.
+- An exclusively locked source returns a busy/locked error and leaves no partial destination;
+  releasing the lock reveals the original committed row unchanged. Existing-destination refusal also
+  pins its specific Cocoa error, so a missing-source error cannot make that test pass by accident.
 
 Membership: `project.yml` recursively includes `Strand` in both Strand and NOOPiOS, without excluding
 the helper. Recursive `StrandTests` includes the tests; the Strand scheme runs that bundle. Compiler

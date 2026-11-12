@@ -25,7 +25,7 @@ temporary synthetic databases; they never read the owner's health records. CI no
 `tests.test_night_signal_audit` in `.github/workflows/tools-python.yml` so these tests are not
 silently omitted by the separate core-test discovery.
 
-## Native tests and compilation still required
+## Native validation commands
 
 On a macOS machine/runner with the Xcode SDK required by `project.yml` and `app-build.yml`:
 
@@ -33,6 +33,7 @@ On a macOS machine/runner with the Xcode SDK required by `project.yml` and `app-
 swift test --package-path Packages/WhoopProtocol
 swift test --package-path Packages/WhoopStore
 swift test --package-path Packages/StrandAnalytics
+swift test --package-path Packages/StrandDesign
 xcodegen generate
 xcodebuild -project Strand.xcodeproj -scheme NOOPiOS \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
@@ -42,19 +43,21 @@ xcodebuild -project Strand.xcodeproj -scheme Strand \
 
 `StrainInputValidityTests.swift` covers both recipes, nonfinite parameters, invalid denominators,
 nonpositive HR, a genuine zero, missing data and the refusal diagnostic. The corresponding Kotlin
-cases are in `StrainInputValidityTest.kt`. They are written, **not executed here**. After installing
+cases are in `StrainInputValidityTest.kt`. Both have now executed in the validation workflows;
+the batch record tracks their exact commits/results. After installing
 JDK 17 and the repository-required Android SDK, the targeted Windows command is:
 
 ```powershell
-.\android\gradlew.bat -p android testFullDebugUnitTest --tests com.noop.analytics.StrainInputValidityTest --no-build-cache --rerun-tasks
+.\android\gradlew.bat -p android testFullDebugUnitTest --tests com.noop.analytics.StrainInputValidityTest --tests com.noop.analytics.EffortScoreFunnelTest --no-build-cache --rerun-tasks
 ```
 
-Run the broader native suite and app compilation before merging. A compiled Swift-versus-Kotlin
-oracle must still confirm the valid/invalid corpus: no byte-parity execution is claimed from reading
-the two files. The existing GitHub **App build (macOS + iOS)** workflow has a manual dispatch, builds
+Run the broader native suite and app compilation before merging. The compiled Swift/Kotlin oracle
+has executed on synthetic input; the expected output is pinned verbatim in both tests. Invalid-input
+and refusal-reason cases execute separately. GitHub **App build (macOS + iOS)** has a manual dispatch, builds
 both app schemes and runs macOS app tests. It needs the changes present on a remote branch; local
-uncommitted edits cannot be checked by that runner. No remote build or release was started in this
-session. The old iMac is not assumed capable of the required SDK. Signing and sideloading steps
+uncommitted edits cannot be checked by that runner. Only validation workflows have been dispatched;
+no release workflow was used. Mac capacity failures have a documented optional Intel runner fallback.
+The old iMac is not assumed capable of the required SDK. Signing and sideloading steps
 remain in [IOS.md](IOS.md); the build commands above require no signing credential.
 
 ## First iPhone/WHOOP 5 trial
@@ -66,14 +69,14 @@ remain in [IOS.md](IOS.md); the build commands above require no signing credenti
    unavailable. User goals start unset. The sleep-circle fill only reflects a chosen duration goal.
 3. Traverse previously enabled settings, delivered notifications, old quick actions, help, imported
    data and widgets after upgrade. Confirm that recovery/readiness and Coach do not reappear. The
-   Apple Watch companion is still an explicit remaining migration item, not a completed feature.
+   Apple Watch sources now render sleep/effort only; installed Watch behavior still needs a trial.
 4. Confirm live HR, successful history sync, selected physical device and firmware. Note dropouts;
    connected/live HR does not prove complete overnight history. No new configuration writes are
    required by the inventory tool.
 5. Record an actual night's bed/attempt/wake/rise information using the private copy of the
    [session template](validation/session-log-template.csv). Unknown times remain empty. Repeat for
    naps and fragmented nights before treating the detector as reliable.
-6. Export a **consistent SQLite snapshot** using the existing backup/export tooling. Preserve the
+6. Export a **consistent SQLite snapshot** using the transactional online-backup path. Preserve the
    original. A `.noopbak` is a ZIP container, not a SQLite file; extract a private copy locally if
    necessary. Do not copy a live SQLite main file while writes remain in its WAL. If export consistency
    cannot be established, stop rather than treating omitted rows as unavailable sensor data.
@@ -101,7 +104,10 @@ mean physiologically accurate. Sparse input must not be repaired by filling zero
 Test an alarm separately with a dependable backup alarm. Record the actual vibration, cancellation,
 weekday and clock/DST behavior. A successful write/readback is not proof that it woke the wearer.
 
-## Evidence ledger — 2026-11-12
+## Historical ledger — initial Windows attempt, 2026-11-12
+
+These rows document the first attempt, not subsequent remote execution. Current results and exact
+tested commits are in [the batch record](SLEEP_EFFORT_BATCH_VALIDATION.md).
 
 | Check | Actual result | What it establishes |
 |---|---|---|
@@ -128,7 +134,8 @@ omits effort because its legacy synchronous row cannot establish the score's pro
 shows real live HR/link state; no commercial score is relabelled as NOOP there. Widgets now detect
 the logical-day boundary as well as the calendar-day boundary before reusing score fields.
 
-General-purpose detail screens still use existing source-resolution policies; import conflicts,
-the full legacy navigation/help/share audit and the embedded Watch migration remain in the
-prioritized audit. Existing historical rows are retained. Changes here are source edits; an app
-upgrade and real-device traversal are required to establish what the wearer actually sees.
+General-purpose detail screens still use existing source-resolution policies. Legacy navigation,
+help, notifications, shortcuts, widgets and Watch sources have been reviewed/corrected as recorded
+in the batch ledger. Existing historical rows are retained. An upgrade and real-device traversal
+are still required to establish what the wearer actually sees; imported-source integration also
+needs private real-export trials.

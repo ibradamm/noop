@@ -4,7 +4,18 @@ import UserNotifications
 
 @main
 struct StrandApp: App {
+    /// Enabled only by the hosted-unit-test scheme. The app still compiles its real UI, but the
+    /// test process need not launch Metal rendering, live BLE or menu-bar state before XCTest starts.
+    private static var unitTestHost: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["NOOP_UNIT_TEST_HOST"] == "1"
+        #else
+        false
+        #endif
+    }
+
     init() {
+        if Self.unitTestHost { print("[unit-test-host] using empty UI for hosted logic tests") }
         // #1008: pin the pre-change Overnight-only default for existing installs before
         // anything reads it. Idempotent; a no-op on fresh installs and after the first launch.
         PuffinExperiment.migrateContinuousHrvOvernightDefault()
@@ -45,6 +56,9 @@ struct StrandApp: App {
 
     var body: some Scene {
         WindowGroup {
+            if Self.unitTestHost {
+                EmptyView()
+            } else {
             ContentView()
                 .environmentObject(model)
                 .environmentObject(model.ble)   // #334: Today pull-to-sync reads BLEManager (no HR churn)
@@ -79,23 +93,28 @@ struct StrandApp: App {
                 .onChange(of: scenePhase) { phase in
                     if phase == .active { model.ble.requestSync(.foreground) }
                 }
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1180, height: 820)
 
         // Menu-bar extra: glanceable live HR + a compact popover.
         MenuBarExtra {
+            if !Self.unitTestHost {
             MenuBarContent()
                 .environmentObject(model)
                 .environmentObject(model.repo)
                 .environmentObject(model.live)
                 .environment(\.locale, AppLanguage.activeLocale)
+            }
         } label: {
+            if !Self.unitTestHost {
             MenuBarLabel()
                 .environmentObject(model)
                 .environmentObject(model.repo)
                 .environmentObject(model.live)
                 .environment(\.locale, AppLanguage.activeLocale)
+            }
         }
         .menuBarExtraStyle(.window)
     }

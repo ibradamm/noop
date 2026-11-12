@@ -37,13 +37,16 @@ enum SQLiteBackupSnapshot {
         guard let backup = sqlite3_backup_init(output, "main", input, "main") else {
             throw NSError(domain: "NOOP.SQLiteSnapshot", code: Int(sqlite3_errcode(output)))
         }
-        let deadline = ProcessInfo.processInfo.systemUptime + 5
+        var retryDeadline = ProcessInfo.processInfo.systemUptime + 5
         var code: Int32
         repeat {
             code = sqlite3_backup_step(backup, 256)
+            // A large, progressing copy must not fail a total-duration limit. Bound only a
+            // continuous busy/locked interval; the pinned read transaction keeps progress finite.
+            if code == SQLITE_OK { retryDeadline = ProcessInfo.processInfo.systemUptime + 5 }
             if code == SQLITE_BUSY || code == SQLITE_LOCKED { Thread.sleep(forTimeInterval: 0.02) }
-        } while (code == SQLITE_OK || code == SQLITE_BUSY || code == SQLITE_LOCKED)
-            && ProcessInfo.processInfo.systemUptime < deadline
+        } while code == SQLITE_OK || ((code == SQLITE_BUSY || code == SQLITE_LOCKED)
+            && ProcessInfo.processInfo.systemUptime < retryDeadline)
         let finished = sqlite3_backup_finish(backup)
         guard code == SQLITE_DONE else {
             throw NSError(domain: "NOOP.SQLiteSnapshot", code: Int(code == SQLITE_OK ? SQLITE_BUSY : code))
